@@ -1,0 +1,117 @@
+body {
+  padding: 0;
+  margin: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background-color: #fcfafa;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Capriola", serif;
+  text-align: center;
+}
+
+h1 {
+  font-size: 72px;
+}
+
+h2 {
+  font-size: 48px;
+}
+
+h3 {
+  font-size: 36px;
+}
+
+p {
+  font-family: "Asap", sans-serif;
+  margin: auto;
+  padding: 100px;
+  font-size: 28px;
+}
+
+footer {
+  font-family: "Asap", sans-serif;
+  text-align: center;
+  padding: 100px;
+}
+
+/* DESKTOP LAYOUT */
+
+#int-container {
+  position: relative;
+  height: 100vh;
+}
+
+#intro-bubble {
+  background-color: #d0786d;
+  border-radius: 50%;
+  width: 1100px;
+  height: 1100px;
+  top: -550px;
+  left: -550px;
+  position: absolute;
+  z-index: 0;
+}
+
+#title {
+  z-index: 999;
+  color: white;
+  text-align: left;
+  width: 25%;
+  position: relative;
+  padding: 50px;
+}
+#intro-text {
+  text-align: right;
+  padding: 0px 50px 50px 50px;
+  width: 55%;
+  top: 400px;
+  right: 100px;
+  position: absolute;
+}
+
+.section-title {
+  padding-top: 400px;
+}
+
+/* make the below in a grid  */
+
+#part-one {
+  position: relative;
+}
+
+#budget-totality {
+  right: 100px;
+  position: sticky;
+  padding: 50px;
+}
+
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 0px;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+#to-top {
+  float: right;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  color: #d0786d;
+  font-size: 20px;
+  padding: 0px 30px 15px 0px;
+}
+
+#selected-year {
+  font-size: 20px;
+  font-family: Asap;
+  padding: 15px;
+}
+
+/* MOBILE LAYOUT */
