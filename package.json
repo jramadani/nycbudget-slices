@@ -1,0 +1,23 @@
+{
+  "name": "nycbudget-slices",
+  "version": "1.0.0",
+  "description": "Capstone project for M.S. in Data Analysis & Visualization at the CUNY Graduate Center",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jramadani/nycbudget-slices.git"
+  },
+  "author": "Joanne Ramadani",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jramadani/nycbudget-slices/issues"
+  },
+  "homepage": "https://github.com/jramadani/nycbudget-slices#readme",
+  "dependencies": {
+    "d3": "^7.1.1",
+    "scrollama": "^3.0.1"
+  }
+}
