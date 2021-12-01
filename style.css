@@ -114,4 +114,12 @@ button {
   padding: 15px;
 }
 
+#heatmap {
+  margin-left: 50px;
+}
+table {
+  width: 50%;
+  text-align: center;
+}
+
 /* MOBILE LAYOUT */

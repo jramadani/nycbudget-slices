@@ -10,6 +10,7 @@ let state = {
   geojson: [],
   hbcdata: [],
   cbdata: [],
+  pivotcb: [],
   selectedcd: null,
   selectedyear: 2017,
   activeCD: [],
@@ -21,11 +22,13 @@ Promise.all([
   d3.json("./data/cd-boundaries-albers.geojson", d3.autoType),
   d3.csv("./data/adoptedtotal.csv", d3.autoType),
   d3.csv("./data/commboards.csv", d3.autoType),
-]).then(([geojson, hbcdata, cbdata]) => {
+  d3.csv("./data/cbs-rolledup.csv", d3.autoType),
+]).then(([geojson, hbcdata, cbdata, pivotcb]) => {
   //setting the state with data
   state.geojson = geojson;
   state.hbcdata = hbcdata;
   state.cbdata = cbdata;
+  state.pivotcb = pivotcb;
   console.log("state: ", state);
   init();
 });
@@ -34,9 +37,31 @@ function init() {
   //this init function will store the execution of the individual chart functions
   //this is mostly to control the scroll when that's implemented
 
+  //initialize treemap data here:
+  //testing treemap data
+  const tdata1 = d3
+    .hierarchy(
+      d3
+        .group(
+          state.cbdata.filter((d) => d.Year == 2021 && d.Modified != 0),
+          //you can make the bottom one a variable that matches with a dropdown to switch the data i am a GENIUS
+          (d) => d.Agency,
+          (d) => d["Expense Category"]
+        )
+        .get("Manhattan Community Board # 6")
+    )
+    .copy()
+    .sum((d) => d.Modified);
+
+  console.log("hierarchical data", tdata1);
+  //first treemap:
+  //second treemap:
+
   core();
   hbc();
+  heattable();
   geomap();
+  treemap(tdata1, "#top-CB-treemap");
 
   //control scroll here
 
@@ -106,17 +131,23 @@ function core() {
     });
 }
 
-function fiscyear() {
+function fiscyear(caldata, placement) {
   // this one should be a standard item that gets passed dates
   // maybe highlighting key months?
   //either way it should show a standard gregorian year first
   //then it should show the june-july fiscal year. both show up next to each other
 }
 
+function involvement() {}
+
 function tenmil() {
   // first set up the single bar--there should be highlights for each?
   // then set up the items--how many items equal the 10 mil?
   //may need to outline this one
+
+  const overarching = state.hbcdata.filter((d) => d.Year == 2021);
+
+  d3.select("#tenmil");
 }
 function balancing() {
   // afair this one may just be for flair?
@@ -202,28 +233,72 @@ function hbc() {
 function heattable() {
   //create table
   //conditional formatting by value
+
+  //need to figure out how to reorder the data or the columns
+  //and then how to only take the numbers
+
+  //color scale
+  const color = d3.scaleSequential((d) => d3.interpolateBuPu(d));
+  const format = d3.format(",." + d3.precisionFixed(1) + "f");
+  const table = d3.select("#heatmap").append("table");
+  const thead = table.append("thead");
+  thead
+    .append("tr")
+    .selectAll("th")
+    .data(Object.keys(Object.values(state.pivotcb)[0]))
+    .join("th")
+    .text((d) => d);
+
+  const rows = table
+    .append("tbody")
+    .selectAll("tr")
+    .data(state.pivotcb)
+    .join("tr")
+    .style("background-color", (d) => color(d));
+
+  rows
+    .selectAll("td")
+    .data((d) => Object.values(d))
+    .join("td")
+    .text((d) => (typeof d === "string" ? d : format(d)));
 }
 
-function treemap(wrappeddata) {
+function treemap(wrappeddata, element) {
   //this needs to be a reusable component--make sure parts are easily substituted
 
   //wrappeddata is the data in its final state, pulled into this function
   //the data should be hierarchical
 
-  let root = d3
-    .hierarchy(wrappeddata)
-    .sum((d) => d.value)
-    .sort((a, b) => b.value - a.value);
+  let scale = d3
+    .scaleLinear()
+    .domain(d3.extent(wrappeddata, (d) => d.value))
+    .range([0.25, 1]);
+
+  let color = d3.scaleSequential((d) => d3.interpolateGreens(scale(d)));
+
+  let format = d3.format(",d");
+
+  //select the html element
+
+  let svg = d3
+    .select(element)
+    .append("svg")
+    .attr("width", width * 1.2)
+    .attr("height", height);
+
+  let root = wrappeddata;
+
+  console.log("hierarchy test", root.leaves());
 
   let tree = d3
     .treemap()
-    .size([this.width * 1.5, this.height])
+    .size([width * 1.2, height])
     .padding(1)
     .round(true);
 
   tree(root);
 
-  let leaf = this.svg
+  let leaf = svg
     .selectAll("g")
     .data(root.leaves())
     .join("g")
@@ -232,30 +307,32 @@ function treemap(wrappeddata) {
   leaf
     .append("rect")
     .attr("stroke", "white")
-    .attr("fill", (d) => color(d.data.value))
+    .attr("fill", (d) => color(d.value))
     .attr("width", (d) => d.x1 - d.x0)
     .attr("height", (d) => d.y1 - d.y0);
 
-  this.svg
+  svg
     .selectAll("text")
     .data(root.leaves())
     .enter()
     .append("text")
     .attr("x", (d) => d.x0 + 5)
-    .attr("y", (d) => d.y0 + 20)
-    .text((d) => d.data.key)
-    .attr("font-size", "12px")
+    .attr("y", (d) => d.y0 + 30)
+    .text((d) => d.data["Expense Category"])
+    .attr("font-size", "20px")
+    .attr("font-family", "Asap")
     .attr("fill", "white");
 
-  this.svg
+  svg
     .selectAll("values")
     .data(root.leaves())
     .enter()
     .append("text")
     .attr("x", (d) => d.x0 + 5)
-    .attr("y", (d) => d.y0 + 35)
-    .text((d) => format(Number(Math.round(d.data.value + "e2") + "e-2")))
-    .attr("font-size", "10px")
+    .attr("y", (d) => d.y0 + 55)
+    .text((d) => format(Number(Math.round(d.value + "e2") + "e-2")))
+    .attr("font-size", "18px")
+    .attr("font-family", "Asap")
     .attr("fill", "white");
 }
 
@@ -271,14 +348,38 @@ function geomap() {
     console.log("new selected year is", this.value);
     d3.select("#selected-year").html(`${this.value}`);
     state.selectedyear = this.value;
+
+    //update data for selection
+
+    data = state.cbdata.filter((d) => d.Year == state.selectedyear);
+    //update the aggregation
+
+    rolledup = d3.rollups(
+      data,
+      (v) => d3.sum(v, (x) => x.Adopted),
+      (d) => d.CBnum
+    );
+
+    color = d3.scaleSequential(d3.extent(rolledup.map((d) => d[1])), [
+      "#EEC994",
+      // "#D69668",
+      "#D0786D",
+    ]);
+
+    //update fill
+    d3.selectAll(".cd").attr("fill", (d) =>
+      rolledup.find((v) => v[0] == d.properties.BoroCD) == undefined
+        ? "rgba(238,201,148,0.38)"
+        : color(rolledup.find((v) => v[0] == d.properties.BoroCD)[1])
+    );
   });
 
   //select the data to create the choropleth:
 
-  const data = state.cbdata.filter((d) => d.Year == state.selectedyear);
+  let data = state.cbdata.filter((d) => d.Year == state.selectedyear);
   //the data has to be aggregated so that we have totals per CB...
 
-  const rolledup = d3.rollups(
+  let rolledup = d3.rollups(
     data,
     (v) => d3.sum(v, (x) => x.Adopted),
     (d) => d.CBnum
@@ -287,7 +388,7 @@ function geomap() {
   //color scale - continuous #EEC994, #D69668, #D0786D
 
   //revisit the colors--we want to show magnitude--is it really that much?
-  const color = d3.scaleSequential(d3.extent(rolledup.map((d) => d[1])), [
+  let color = d3.scaleSequential(d3.extent(rolledup.map((d) => d[1])), [
     "#EEC994",
     // "#D69668",
     "#D0786D",
@@ -323,18 +424,22 @@ function geomap() {
         ? "rgba(238,201,148,0.38)"
         : color(rolledup.find((v) => v[0] == d.properties.BoroCD)[1])
     )
-    .attr("stroke", "black")
+    .attr("stroke", "white")
     .on("mouseover", function () {
-      d3.select(this).attr("stroke", "#DCA4B0").attr("stroke-width", "3px");
+      d3.select(this).attr("stroke", "#5C3C22").attr("stroke-width", "3px");
       state.selectedcd = this.__data__.properties.BoroCD;
       draw();
     })
     .on("mouseout", function () {
-      d3.select(this).attr("stroke", "black").attr("stroke-width", "1px");
+      d3.select(this).attr("stroke", "white").attr("stroke-width", "1px");
     })
     .on("click", function () {
       console.log(this.__data__.properties.BoroCD);
     });
+}
+
+function supplementaltrend() {
+  // for an area graph per community board
 }
 
 function draw() {
