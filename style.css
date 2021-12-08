@@ -83,12 +83,15 @@ footer {
 
 #part-one {
   position: relative;
+  display: grid;
+  grid-template-columns: 50% 50%;
 }
 
 #budget-totality {
   right: 100px;
   position: sticky;
   padding: 50px;
+  margin: auto;
 }
 
 button {
@@ -120,6 +123,44 @@ button {
 table {
   width: 50%;
   text-align: center;
+}
+
+#fiscal-years {
+  display: grid;
+  grid-template-columns: 25% 12% 12% 50%;
+  justify-items: center;
+}
+#involvement {
+  display: grid;
+  grid-template-columns: 50% 50%;
+}
+
+#budget-review-overall {
+  display: grid;
+  justify-items: center;
+}
+#budget-review {
+  /* list-style-type: "\2728"; */
+  list-style-type: "\1F4B0";
+  font-size: 28px;
+  font-family: Asap;
+  margin: auto;
+  list-style-position: outside;
+}
+
+li {
+  padding-left: 30px;
+  line-height: 150%;
+}
+
+.highlighted {
+  background-color: #eec994;
+  padding: 5px;
+  font-weight: 600;
+}
+
+.viz {
+  margin: auto;
 }
 
 /* MOBILE LAYOUT */

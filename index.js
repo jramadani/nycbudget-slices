@@ -2,7 +2,6 @@
 const width = 1000;
 height = 500;
 margin = { top: 20, bottom: 50, left: 60, right: 40 };
-defaultYear = 2017;
 
 //state management
 
@@ -10,7 +9,10 @@ let state = {
   geojson: [],
   hbcdata: [],
   cbdata: [],
-  pivotcb: [],
+  tenmil: [],
+  d21: [],
+  dhalf1: [],
+  dhalf2: [],
   selectedcd: null,
   selectedyear: 2017,
   activeCD: [],
@@ -22,13 +24,25 @@ Promise.all([
   d3.json("./data/cd-boundaries-albers.geojson", d3.autoType),
   d3.csv("./data/adoptedtotal.csv", d3.autoType),
   d3.csv("./data/commboards.csv", d3.autoType),
-  d3.csv("./data/cbs-rolledup.csv", d3.autoType),
-]).then(([geojson, hbcdata, cbdata, pivotcb]) => {
+  d3.csv("./data/tenmil.csv", d3.autoType),
+  d3.csv("./data/dates21.csv", (d) => ({
+    date: new Date(d.date),
+  })),
+  d3.csv("./data/dates-partial-half1.csv", (d) => ({
+    date: new Date(d.date),
+  })),
+  d3.csv("./data/dates-partial-half2.csv", (d) => ({
+    date: new Date(d.date),
+  })),
+]).then(([geojson, hbcdata, cbdata, tenmil, d21, dhalf1, dhalf2]) => {
   //setting the state with data
   state.geojson = geojson;
   state.hbcdata = hbcdata;
   state.cbdata = cbdata;
-  state.pivotcb = pivotcb;
+  state.tenmil = tenmil;
+  state.d21 = d21;
+  state.dhalf1 = dhalf1;
+  state.dhalf2 = dhalf2;
   console.log("state: ", state);
   init();
 });
@@ -36,6 +50,44 @@ Promise.all([
 function init() {
   //this init function will store the execution of the individual chart functions
   //this is mostly to control the scroll when that's implemented
+
+  //control scroll here
+
+  // instantiate the scrollama
+  const scroller = scrollama();
+
+  // generic window resize listener event
+  function handleResize() {
+    // 1. update height of step elements
+    var stepH = Math.floor(window.innerHeight * 0.75);
+    step.style("height", stepH + "px");
+
+    var figureHeight = window.innerHeight / 2;
+    var figureMarginTop = (window.innerHeight - figureHeight) / 2;
+
+    figure
+      .style("height", figureHeight + "px")
+      .style("top", figureMarginTop + "px");
+
+    // 3. tell scrollama to update new element dimensions
+    scroller.resize();
+  }
+
+  // handleResize();
+  // setup the instance, pass callback functions
+  scroller
+    .setup({
+      step: ".step",
+      offset: 0.33,
+      debug: false,
+    })
+    .onStepEnter((response) => {
+      console.log(response);
+      // step.classed("is-active");
+    })
+    .onStepExit((response) => {
+      // { element, index, direction }
+    });
 
   //initialize treemap data here:
   //testing treemap data
@@ -58,30 +110,18 @@ function init() {
   //second treemap:
 
   core();
+  fiscyear(state.d21, "#fisc1", "#DCA4B0");
+  fiscyear(state.dhalf1, "#fisc2", "#D69668");
+  fiscyear(state.dhalf2, "#fisc3", "#D69668");
+  involvement();
   hbc();
-  heattable();
+  // heattable();
+  // commenting heattable out temporarily while i get the right data in there
   geomap();
   treemap(tdata1, "#top-CB-treemap");
-
-  //control scroll here
-
-  // instantiate the scrollama
-  const scroller = scrollama();
-
-  // setup the instance, pass callback functions
-  scroller
-    .setup({
-      step: ".step",
-    })
-    .onStepEnter((response) => {
-      // { element, index, direction }
-    })
-    .onStepExit((response) => {
-      // { element, index, direction }
-    });
 }
 
-//functions for the thing
+//functions for the visualizations
 
 // PART ONE FUNCTIONS:
 
@@ -131,14 +171,225 @@ function core() {
     });
 }
 
-function fiscyear(caldata, placement) {
-  // this one should be a standard item that gets passed dates
-  // maybe highlighting key months?
-  //either way it should show a standard gregorian year first
-  //then it should show the june-july fiscal year. both show up next to each other
+function fiscyear(caldata, placement, color) {
+  // calendar base from Mike Bostock, adapted for vertical use
+
+  const cellSize = 17;
+  weekday = "monday";
+  countDay = weekday === "sunday" ? (i) => i : (i) => (i + 6) % 7;
+  timeWeek = weekday === "sunday" ? d3.utcSunday : d3.utcMonday;
+  formatMonth = d3.utcFormat("%b");
+  formatDay = (i) => "SMTWTFS"[i];
+  formatDate = d3.utcFormat("%x");
+  formatIso = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
+
+  function pathMonth(t) {
+    const n = weekday === "weekday" ? 5 : 7;
+    const d = Math.max(0, Math.min(n, countDay(t.getUTCDay())));
+    const w = timeWeek.count(d3.utcYear(t), t);
+    return `${
+      d === 0
+        ? `M-100,${w * cellSize}`
+        : d === n
+        ? `M-100,${(w + 1) * cellSize}`
+        : `M-100,${(w + 1) * cellSize}H${d * cellSize}V${w * cellSize}`
+    }H${n * cellSize}`;
+  }
+
+  //
+
+  let years = d3.groups(caldata, (d) => new Date(d.date).getUTCFullYear());
+  console.log("here are the years", years);
+
+  const container = d3.select(placement).style("position", "relative");
+
+  let svg = container
+    .append("svg")
+    .attr("class", "calendarsvg")
+    .attr("width", width / 5)
+    .attr("height", height * 2)
+    .attr("font-family", "sans-serif")
+    .attr("font-size", 10);
+
+  const year = svg
+    .selectAll("g")
+    .data(years)
+    .join("g")
+    .attr(
+      "transform",
+      (d, i) => `translate(40.5,${height * i + cellSize * 1.5})`
+    );
+
+  year
+    .append("text")
+    .attr("x", -15)
+    .attr("y", -15)
+    .attr("font-weight", "bold")
+    .attr("text-anchor", "end")
+    .text(([key]) => key);
+
+  year
+    .append("g")
+    .attr("text-anchor", "end")
+    .selectAll("text")
+    .data(weekday === "weekday" ? d3.range(1, 6) : d3.range(7))
+    .join("text")
+    .attr("x", (i) => (countDay(i) + 0.5) * cellSize)
+    .attr("y", -5)
+    .attr("dy", "0.31em")
+    .text(formatDay);
+
+  year
+    .append("g")
+    .selectAll("rect")
+    .data(
+      weekday === "weekday"
+        ? ([, values]) =>
+            values.filter((d) => ![0, 6].includes(d.date.getUTCDay()))
+        : ([, values]) => values
+    )
+    .join("rect")
+    .attr("width", cellSize - 1)
+    .attr("height", cellSize - 1)
+    .attr("x", (d) => countDay(d.date.getUTCDay()) * cellSize + 0.5)
+    .attr(
+      "y",
+      (d) => timeWeek.count(d3.utcYear(d.date), d.date) * cellSize + 0.5
+    )
+    .attr("fill", color)
+    .attr("stroke", "none")
+    .append("title")
+    .text((d) => d.date);
+
+  const month = year
+    .append("g")
+    .selectAll("g")
+    .data(([, values]) =>
+      d3.utcMonths(d3.utcMonth(values[0].date), values[values.length - 1].date)
+    )
+    .join("g");
+
+  month
+    .filter((d, i) => i)
+    .append("path")
+    .attr("fill", "none")
+    .attr("stroke", "#fff")
+    .attr("stroke-width", 3)
+    .attr("d", pathMonth);
+
+  month
+    .append("text")
+    .attr("x", -25)
+    .attr(
+      "y",
+      (d) => timeWeek.count(d3.utcYear(d), timeWeek.ceil(d)) * cellSize + 10
+    )
+    .text(formatMonth);
 }
 
-function involvement() {}
+function involvement() {
+  //data setup
+  const parties = {
+    nodes: [
+      {
+        id: 1,
+        name: "Mayor",
+        color: "#D69668",
+      },
+      {
+        id: 2,
+        name: "City Council",
+        color: "#9ECE96",
+      },
+      {
+        id: 3,
+        name: "Lobbyists",
+        color: "#DCA4B0",
+      },
+    ],
+    links: [
+      {
+        source: 1,
+        target: 2,
+      },
+      {
+        source: 2,
+        target: 1,
+      },
+      {
+        source: 3,
+        target: 1,
+      },
+      {
+        source: 3,
+        target: 2,
+      },
+    ],
+  };
+
+  // for 12/4 - nodes aren't showing where they need to, double check the positioning/force
+  //nodemap
+
+  const svg = d3
+    .select("#involved")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  // Initialize the links
+  const link = svg
+    .selectAll("line")
+    .data(parties.links)
+    .join("line")
+    .style("stroke", "#aaa")
+    .style("stroke-style", "dashed");
+
+  // Initialize the nodes
+  const node = svg
+    .selectAll("circle")
+    .data(parties.nodes)
+    .join("circle")
+    .attr("r", 20)
+    .attr("fill", (d) => d.color);
+
+  const simulation = d3
+    .forceSimulation(parties.nodes) // Force algorithm is applied to data.nodes
+    .force(
+      "link",
+      d3
+        .forceLink() // This force provides links between nodes
+        .id((d) => d.id)
+        .links(parties.links) // and this the list of links
+    )
+    .force("charge", d3.forceManyBody().strength(-400)) // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+    .force("center", d3.forceCenter(width / 2, height / 2)) // This force attracts nodes to the center of the svg area
+    .on("end", ticked);
+
+  // This function is run at each iteration of the force algorithm, updating the nodes position.
+  function ticked() {
+    link
+      .attr("x1", function (d) {
+        return d.source.x;
+      })
+      .attr("y1", function (d) {
+        return d.source.y;
+      })
+      .attr("x2", function (d) {
+        return d.target.x;
+      })
+      .attr("y2", function (d) {
+        return d.target.y;
+      });
+
+    node
+      .attr("cx", function (d) {
+        return d.x + 6;
+      })
+      .attr("cy", function (d) {
+        return d.y - 6;
+      });
+  }
+}
 
 function tenmil() {
   // first set up the single bar--there should be highlights for each?
@@ -234,8 +485,7 @@ function heattable() {
   //create table
   //conditional formatting by value
 
-  //need to figure out how to reorder the data or the columns
-  //and then how to only take the numbers
+  // data needs to be top 10 agencies by year
 
   //color scale
   const color = d3.scaleSequential((d) => d3.interpolateBuPu(d));
@@ -252,7 +502,7 @@ function heattable() {
   const rows = table
     .append("tbody")
     .selectAll("tr")
-    .data(state.pivotcb)
+    .data()
     .join("tr")
     .style("background-color", (d) => color(d));
 
@@ -435,13 +685,22 @@ function geomap() {
     })
     .on("click", function () {
       console.log(this.__data__.properties.BoroCD);
+      //filter the data here, pass it through to the function
+      const cbarea = state.cbdata.filter(
+        (d) => d.CBnum == this.__data__.properties.BoroCD
+      );
+
+      const summarized = d3
+        .rollups(
+          cbarea,
+          (xs) => d3.sum(xs, (x) => x.Modified),
+          (d) => d.Year
+        )
+        .map(([y, v]) => ({ Year: y, Modified: v }));
+
+      supplementaltrend(summarized);
     });
 }
-
-function supplementaltrend() {
-  // for an area graph per community board
-}
-
 function draw() {
   //this part is for the maps
   if (state.selectedcd) {
@@ -465,4 +724,101 @@ function draw() {
       );
     }
   }
+}
+
+function supplementaltrend(data) {
+  // for an area graph per community board
+  d3.selectAll("#cbarea").remove();
+
+  //might need to roll up the data and sum it again sigh
+
+  let svg = d3
+    .select("#ch-area")
+    .append("svg")
+    .attr("id", "cbarea")
+    .attr("width", width)
+    .attr("height", height);
+
+  //set up scales & axes
+  const xScale = d3
+    .scaleTime()
+    .domain(d3.extent(data, (d) => d.Year))
+    .range([margin.left, width - margin.right]);
+
+  const yScale = d3
+    .scaleLinear()
+    .domain([d3.min(data, (d) => d.Modified), 600000])
+    .range([height - margin.bottom, margin.top]);
+
+  const xAxis = d3.axisBottom(xScale);
+  const yAxis = d3.axisLeft(yScale);
+
+  //draw the area
+  const areaFunc = d3
+    .area()
+    .x((d) => xScale(d.Year))
+    .y1((d) => yScale(d.Modified))
+    .y0((d) => yScale(d3.min(data, (d) => d.Modified)));
+
+  const area = svg
+    .append("path")
+    .datum(data)
+    .attr("fill", "lightblue")
+    .attr("stroke", "#494197")
+    .attr("stroke-width", 1.5)
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-linecap", "round")
+    .attr("d", areaFunc);
+
+  //call axes
+
+  svg
+    .append("g")
+    .attr("class", "axis x-axis")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(xAxis)
+    .append("text")
+    .attr("class", "axis-label")
+    .attr("x", "50%")
+    .attr("dy", "3em")
+    .attr("fill", "#259D98");
+
+  svg
+    .append("g")
+    .attr("class", "axis y-axis")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(yAxis)
+    .append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0 - margin.left / 2)
+    .attr("x", 0 - height / 2)
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .text("Budget Allocation ($)")
+    .attr("fill", "#259D98");
+}
+
+function comparative(dropdown, data) {
+  // set up the data first
+  //tmc-1-select controls tm-compare-1 and the same for 2
+
+  // dropdown changing
+
+  const selectElement = d3.select(dropdown).on("change", function () {
+    // `this` === the selectElement
+    // 'this.value' holds the dropdown value a user just selected
+    data = this.value; // + UPDATE STATE WITH YOUR SELECTED VALUE
+    draw(); // re-draw the graph based on this new selection
+  });
+
+  // add in dropdown options from the unique values in the data
+  selectElement
+    .selectAll("option")
+    .data(Array.from(new Set(state.data.map((d) => d.ctype)))) // + ADD DATA VALUES FOR DROPDOWN
+    .join("option")
+    .attr("value", (d) => d)
+    .text((d) => d);
+
+  // + SET SELECT ELEMENT'S DEFAULT VALUE (optional)
+  selectElement.property("value", default_selection);
 }
