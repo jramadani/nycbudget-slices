@@ -16,6 +16,7 @@ let state = {
   selectedcd: null,
   selectedyear: 2017,
   activeCD: [],
+  toptenmod: [],
 };
 
 //load in the data and call the init function
@@ -34,24 +35,34 @@ Promise.all([
   d3.csv("./data/dates-partial-half2.csv", (d) => ({
     date: new Date(d.date),
   })),
-]).then(([geojson, hbcdata, cbdata, tenmil, d21, dhalf1, dhalf2]) => {
-  //setting the state with data
-  state.geojson = geojson;
-  state.hbcdata = hbcdata;
-  state.cbdata = cbdata;
-  state.tenmil = tenmil;
-  state.d21 = d21;
-  state.dhalf1 = dhalf1;
-  state.dhalf2 = dhalf2;
-  console.log("state: ", state);
-  init();
-});
+  d3.csv("./data/toptenpct-modified.csv", d3.autoType),
+]).then(
+  ([geojson, hbcdata, cbdata, tenmil, d21, dhalf1, dhalf2, toptenmod]) => {
+    //setting the state with data
+    state.geojson = geojson;
+    state.hbcdata = hbcdata;
+    state.cbdata = cbdata;
+    state.tenmil = tenmil;
+    state.d21 = d21;
+    state.dhalf1 = dhalf1;
+    state.dhalf2 = dhalf2;
+    state.toptenmod = toptenmod;
+    console.log("state: ", state);
+    init();
+  }
+);
 
 function init() {
   //this init function will store the execution of the individual chart functions
   //this is mostly to control the scroll when that's implemented
 
+  //rework the HTML body for this part
   //control scroll here
+  const main = d3.select("main");
+  const scrolly = main.select("#scrolly");
+  const figure = scrolly.select("figure");
+  const article = scrolly.select("article");
+  const step = article.selectAll(".step");
 
   // instantiate the scrollama
   const scroller = scrollama();
@@ -78,12 +89,12 @@ function init() {
   scroller
     .setup({
       step: ".step",
-      offset: 0.33,
+      offset: 0.2,
       debug: false,
     })
     .onStepEnter((response) => {
       console.log(response);
-      // step.classed("is-active");
+      step.classed("is-active");
     })
     .onStepExit((response) => {
       // { element, index, direction }
@@ -118,7 +129,21 @@ function init() {
   // heattable();
   // commenting heattable out temporarily while i get the right data in there
   geomap();
-  treemap(tdata1, "#top-CB-treemap");
+  treemap(tdata1, "#top-CB-treemap", "#summs");
+  comparative(
+    "#tmc-1-select",
+    "#tm-compare-1",
+    "#tmc1-details",
+    state.cbdata,
+    "Manhattan Community Board # 12"
+  );
+  comparative(
+    "#tmc-2-select",
+    "#tm-compare-2",
+    "#tmc2-details",
+    state.cbdata,
+    "Bronx Community Board # 5"
+  );
 }
 
 //functions for the visualizations
@@ -485,8 +510,6 @@ function heattable() {
   //create table
   //conditional formatting by value
 
-  // data needs to be top 10 agencies by year
-
   //color scale
   const color = d3.scaleSequential((d) => d3.interpolateBuPu(d));
   const format = d3.format(",." + d3.precisionFixed(1) + "f");
@@ -513,11 +536,72 @@ function heattable() {
     .text((d) => (typeof d === "string" ? d : format(d)));
 }
 
-function treemap(wrappeddata, element) {
-  //this needs to be a reusable component--make sure parts are easily substituted
+function comparative(dropdown, location, details, data, default_selection) {
+  // set up the data first
+  //tmc-1-select controls tm-compare-1 and the same for 2
 
+  // dropdown changing
+
+  const selectElement = d3.select(dropdown).on("change", function () {
+    // data = this.value; // re-draw the graph based on this new selection
+    console.log(this.value);
+    const newdata = this.value;
+    rolleddata = d3
+      .hierarchy(
+        d3
+          .group(
+            data.filter((d) => d.Year == 2021 && d.Modified != 0),
+            //you can make the bottom one a variable that matches with a dropdown to switch the data i am a GENIUS
+            (d) => d.Agency,
+            (d) => d["Expense Category"]
+          )
+          .get(newdata)
+      )
+      .copy()
+      .sum((d) => d.Modified);
+    treemap(rolleddata, location, details, location);
+  });
+
+  // add in dropdown options from the unique values in the data
+  selectElement
+    .selectAll("option")
+    .data(Array.from(new Set(data.map((d) => d.Agency).sort(d3.ascending)))) // + ADD DATA VALUES FOR DROPDOWN
+    .join("option")
+    .attr("value", (d) => d)
+    .text((d) => d);
+
+  // + SET SELECT ELEMENT'S DEFAULT VALUE (optional)
+  selectElement.property("value", default_selection);
+
+  let rolleddata = d3
+    .hierarchy(
+      d3
+        .group(
+          data.filter((d) => d.Year == 2021 && d.Modified != 0),
+          //you can make the bottom one a variable that matches with a dropdown to switch the data i am a GENIUS
+          (d) => d.Agency,
+          (d) => d["Expense Category"]
+        )
+        .get(default_selection)
+    )
+    .copy()
+    .sum((d) => d.Modified);
+
+  treemap(rolleddata, location, details);
+}
+
+function treemap(wrappeddata, element, item, reusable) {
+  //this needs to be a reusable component--make sure parts are easily substituted
+  // to get the item to redraw
+
+  const localwidth = window.innerWidth;
+  if (reusable) {
+    d3.selectAll(`${reusable} svg`).remove();
+  }
   //wrappeddata is the data in its final state, pulled into this function
   //the data should be hierarchical
+
+  let logScale = d3.scaleLog().domain([153, 229152]).range([-0.5, 1.5]);
 
   let scale = d3
     .scaleLinear()
@@ -533,7 +617,7 @@ function treemap(wrappeddata, element) {
   let svg = d3
     .select(element)
     .append("svg")
-    .attr("width", width * 1.2)
+    .attr("width", localwidth / 2.5)
     .attr("height", height);
 
   let root = wrappeddata;
@@ -542,7 +626,7 @@ function treemap(wrappeddata, element) {
 
   let tree = d3
     .treemap()
-    .size([width * 1.2, height])
+    .size([localwidth / 2.5, height])
     .padding(1)
     .round(true);
 
@@ -559,7 +643,17 @@ function treemap(wrappeddata, element) {
     .attr("stroke", "white")
     .attr("fill", (d) => color(d.value))
     .attr("width", (d) => d.x1 - d.x0)
-    .attr("height", (d) => d.y1 - d.y0);
+    .attr("height", (d) => d.y1 - d.y0)
+    .on("mouseover", function () {
+      d3.select(item).html(
+        `<p>${this.__data__.data.Agency}<br><br>${
+          this.__data__.data["Expense Category"]
+        }<br>
+        <br>$${format(
+          Number(Math.round(this.__data__.data.Modified + "e2") + "e-2")
+        )}</p>`
+      );
+    });
 
   svg
     .selectAll("text")
@@ -569,7 +663,7 @@ function treemap(wrappeddata, element) {
     .attr("x", (d) => d.x0 + 5)
     .attr("y", (d) => d.y0 + 30)
     .text((d) => d.data["Expense Category"])
-    .attr("font-size", "20px")
+    .attr("font-size", (d) => `${logScale((d.x1 - d.x0) * (d.y1 - d.y0))}em`)
     .attr("font-family", "Asap")
     .attr("fill", "white");
 
@@ -581,7 +675,10 @@ function treemap(wrappeddata, element) {
     .attr("x", (d) => d.x0 + 5)
     .attr("y", (d) => d.y0 + 55)
     .text((d) => format(Number(Math.round(d.value + "e2") + "e-2")))
-    .attr("font-size", "18px")
+    .attr(
+      "font-size",
+      (d) => `${logScale((d.x1 - d.x0) * (d.y1 - d.y0)) - 0.1}em`
+    )
     .attr("font-family", "Asap")
     .attr("fill", "white");
 }
@@ -730,7 +827,7 @@ function supplementaltrend(data) {
   // for an area graph per community board
   d3.selectAll("#cbarea").remove();
 
-  //might need to roll up the data and sum it again sigh
+  const yearFormat = d3.format(".4");
 
   let svg = d3
     .select("#ch-area")
@@ -750,7 +847,7 @@ function supplementaltrend(data) {
     .domain([d3.min(data, (d) => d.Modified), 600000])
     .range([height - margin.bottom, margin.top]);
 
-  const xAxis = d3.axisBottom(xScale);
+  const xAxis = d3.axisBottom(xScale).tickFormat(yearFormat);
   const yAxis = d3.axisLeft(yScale);
 
   //draw the area
@@ -763,8 +860,8 @@ function supplementaltrend(data) {
   const area = svg
     .append("path")
     .datum(data)
-    .attr("fill", "lightblue")
-    .attr("stroke", "#494197")
+    .attr("fill", "#EEC994")
+    .attr("stroke", "none")
     .attr("stroke-width", 1.5)
     .attr("stroke-linejoin", "round")
     .attr("stroke-linecap", "round")
@@ -789,36 +886,11 @@ function supplementaltrend(data) {
     .attr("transform", `translate(${margin.left},0)`)
     .call(yAxis)
     .append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("y", 0 - margin.left / 2)
-    .attr("x", 0 - height / 2)
+    .attr("transform", "rotate(0)")
+    .attr("y", 0)
+    .attr("x", 0)
     .attr("dy", "1em")
     .style("text-anchor", "middle")
     .text("Budget Allocation ($)")
-    .attr("fill", "#259D98");
-}
-
-function comparative(dropdown, data) {
-  // set up the data first
-  //tmc-1-select controls tm-compare-1 and the same for 2
-
-  // dropdown changing
-
-  const selectElement = d3.select(dropdown).on("change", function () {
-    // `this` === the selectElement
-    // 'this.value' holds the dropdown value a user just selected
-    data = this.value; // + UPDATE STATE WITH YOUR SELECTED VALUE
-    draw(); // re-draw the graph based on this new selection
-  });
-
-  // add in dropdown options from the unique values in the data
-  selectElement
-    .selectAll("option")
-    .data(Array.from(new Set(state.data.map((d) => d.ctype)))) // + ADD DATA VALUES FOR DROPDOWN
-    .join("option")
-    .attr("value", (d) => d)
-    .text((d) => d);
-
-  // + SET SELECT ELEMENT'S DEFAULT VALUE (optional)
-  selectElement.property("value", default_selection);
+    .attr("fill", "#5C3C22");
 }

@@ -6,6 +6,7 @@ body {
   right: 0;
   left: 0;
   background-color: #fcfafa;
+  font-family: Asap;
 }
 
 h1,
@@ -32,6 +33,7 @@ p {
   margin: auto;
   padding: 100px;
   font-size: 28px;
+  line-height: 150%;
 }
 
 footer {
@@ -70,28 +72,13 @@ footer {
   text-align: right;
   padding: 0px 50px 50px 50px;
   width: 55%;
-  top: 400px;
+  bottom: 25px;
   right: 100px;
   position: absolute;
 }
 
 .section-title {
   padding-top: 400px;
-}
-
-/* make the below in a grid  */
-
-#part-one {
-  position: relative;
-  display: grid;
-  grid-template-columns: 50% 50%;
-}
-
-#budget-totality {
-  right: 100px;
-  position: sticky;
-  padding: 50px;
-  margin: auto;
 }
 
 button {
@@ -135,17 +122,27 @@ table {
   grid-template-columns: 50% 50%;
 }
 
-#budget-review-overall {
+.budget-review-overall {
   display: grid;
   justify-items: center;
 }
-#budget-review {
+.budget-review {
   /* list-style-type: "\2728"; */
   list-style-type: "\1F4B0";
   font-size: 28px;
   font-family: Asap;
   margin: auto;
   list-style-position: outside;
+}
+
+.budget-overview {
+  list-style-type: "\2728";
+  /* list-style-type: "\1F4B0"; */
+  font-size: 28px;
+  font-family: Asap;
+  margin-left: 125px;
+  list-style-position: outside;
+  line-height: 300%;
 }
 
 li {
@@ -161,6 +158,55 @@ li {
 
 .viz {
   margin: auto;
+  display: grid;
+  justify-items: center;
 }
 
+/* implementing the sticky scroll */
+
+#budget-totality {
+  position: sticky;
+  position: -webkit-sticky;
+  top: 0;
+  margin: 0;
+  right: 100px;
+  padding-top: 50px;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  z-index: 0;
+  justify-items: center;
+  grid-column-start: 2;
+}
+
+#scrolly {
+  display: grid;
+  margin: 3rem auto;
+  padding: 1rem;
+  position: relative;
+  grid-template-columns: 50% 50%;
+}
+article#part-one {
+  position: relative;
+}
+
+figure p {
+  position: absolute;
+}
+
+/* sticky scroll ends */
+
+#comparison-treemaps {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-template-rows: 15% 85%;
+}
+
+/* .is-active {
+  position: sticky;
+} */
+
 /* MOBILE LAYOUT */
+
+@media screen and (max-aspect-ratio: 4/5) {
+}

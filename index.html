@@ -10,7 +10,7 @@
   </head>
   <body>
 
-  <div id="info-button"><a href="http://github.com/jramadani"><img width="50px" style="top:0; right:0; position:absolute; float: right; padding:10px;" src="/assets/info.svg"></a></div>
+  <div id="info-button"><a href="https://github.com/jramadani/nycbudget-slices"><img width="50px" style="top:0; right:0; position:absolute; float: right; padding:10px;" src="/assets/info.svg"></a></div>
 <div id="int-container">
   <h1 id="title">Slices of the Big Apple</h1>
   <div id="intro-bubble"></div>
@@ -22,20 +22,59 @@
 
 
 
+<main>
 
-<div ><h2 class="section-title">Part One: Cutting to the Core</h2></div>
+<h2 class="section-title">Part One: Cutting to the Core</h2>
+<section id="scrolly">
+      <div id="budget-totality" class="viz"></div> 
+<article id="part-one">
+  <div class="step sequence" data-step="1">
+<p>When we hear about the NYC budget, it tends to be presented as a monolith, one object that controls the funding that keeps New York City running. Contrary to that narrative, what we think of as the city budget is not so much one cohesive unit, but many components coming together under the same name—like an apple is made up of a peel, stem, core, seeds, and the fruit inside.</p>
+<p>According to the Independent Budget Office, the <span class="highlighted">expense budget </span>  is what people tend to think of when they contemplate the budget. The expense budget funds:</p>
+<ul class="budget-overview">
+<li>City employee salaries</li>
+<li>Pensions</li>
+<li>Debt service</li>
+<li>Supplies to run the city</li>
+</ul>
 
-<div id="part-one" class="step" data-step="1">
-<div><p>We tend to think of the city budget as one cohesive unit. But just like an apple looks like a cohesive unit on the outside, the inside looks really different.</p></div>
-<div id="budget-totality" class="viz"></div>
+<p>So it’s <em>some</em> of what people think of, but not everything. These funds are set aside for items that remain fairly consistent.
+</p>
+
+<p>But what about money set aside for things like improving your local library or fixing potholes? Those allocations tend to be made in the <span class="highlighted">capital budget</span>, which covers one fiscal year (we’ll cover fiscal years in the next section), and funds <span class="highlighted">physical infrastructure</span> used in support of:</p>
+<ul class="budget-overview">
+  <li>Government operations (funding government offices, schools, fire stations, etc)</li>
+  <li>General public use (roads, bridges, libraries, parks)</li>
+</ul>
+<p>The <span class="highlighted">Office of Management and Budgets (OMB)</span> is in charge of approving projects submitted under the capital budget, and in order to meet approval requirements, projects have to have:</p>
+<ul class="budget-overview">
+  <li>a value of at least $35,000</li>
+  <li>Probable usefulness for at least 5 years</li>
+</ul>
+
+<p>When considering projects, the OMB will consult technical experts to assess the validity and use of the project, making sure that they actually contribute to the city.</p>
+
+<p>In addition to funding people and projects, the budget also contains a <span class="highlighted">contract budget</span>, which is considered a subset of the expense budget and covers allocations for city entities that hire contractors and other contractual services.</p>
+
+<p>There’s also the <span class="highlighted">financial plan</span>, which is presented alongside the budget and is released on a quarterly basis. This tracks city spending and revenues over a number of years, and each release has its own name depending on when it is released.</p>
+
+<p>The <span class="highlighted">capital program</span> (adjacent to the capital budget) is a plan that manages allocations for capital projects for the current fiscal year as well as the next three. It manages not only new projects from the capital budget, but also projects that have already been started.</p>
+
+  </div>
+</article>
+
+</section>
+
+
+
 <div><p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas id consequatur dolore expedita quidem consectetur saepe, rem quia, accusamus corporis deserunt molestiae nesciunt accusantium recusandae non ex, enim beatae officia.</p></div>
 </div>
-<div id="fiscal-years">
+<article id="fiscal-years">
 <div id="fisc1" class="viz"></div>
 <div id="fisc2" class="viz"></div>
 <div id="fisc3" class="viz"></div>
 <div id="fisc-explanation"><p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Dicta cupiditate fugit ullam numquam atque, ex minus voluptate doloremque, inventore vero nesciunt magni laborum accusamus earum sed culpa sequi mollitia perspiciatis.</p></div>
-</div>
+</article>
 <div id="involvement">
   <div id="involved" class="viz"></div>
   <div id="inv-exp"><h3>Who's involved in the process?</h3><p></p></div>
@@ -49,16 +88,18 @@
 <div><p>The NYC budget is required to be balanced, which means that we <b>cannot</b> spend more than we take in via <b>taxes</b> and other sources of revenue.</p></div>
 
 
-<div id="budget-review-overall">
+<div class="budget-review-overall">
   <h3>Let's review what we learned:</h3>
-<ul id="budget-review">
+<ul class="budget-review">
   <li>  The budget is made of <span class="highlighted">seven</span> main components</li>
+  <li> The fiscal year starts in <span class="highlighted">June</span> and proceeds through to June of the <span class="highlighted">next calendar year</span></li>
   <li>  Many people are involved in allocations, but primarily <span class="highlighted">the Mayor</span> and <span class="highlighted">the City Council</span></li>
-  <li></li>
-  <li></li>
+  <li>The budget is <span class="highlighted">required</span> to have allocations and revenue <span class="highlighted">cancel out</span></li>
 </ul>
 </div>
-
+  </section>
+<div style="padding:100px"></div>
+  <section>
 <div><h2>Part Two: Chewing on the Slices</h2></div>
 <div><p>Now that you've gotten to know the budget a little better, let's dig in and figure out what it looks like close up.<br><br>Over the past five years, the budget has steadily increased&mdash;that is, until the COVID-19 pandemic. <br><br>Because the budget for 2020 was created in 2019, we hit peak allocation for this five-year period in 2020. This is why you see a reduction in total allocation for FY 2021.</p></div>
 <div id="fiveyrHBC" class="viz"></div>
@@ -72,15 +113,33 @@
 <div id="ch-details" class="viz"></div>
 <div id="ch-area" class="viz"></div>
 <div><p>Why do community boards in Manhattan receive more funds than community boards in other boroughs? Is it systemic inequality or is it that the cost of living impacts even our own governments?</p></div>
+<div id="summs"></div>
 <div id="top-CB-treemap" class="viz"></div>
-<div><p>The answer is: both.</p></div>
+<div><p>The answer is: both. Use the dropdowns to select a community board and compare two of them against one another.</p></div>
 
-<div id="tmc-1-select" class="viz"></div>
-<div id="tmc-2-select" class="viz"></div>
+<div id="comparison-treemaps">
+<select id="tmc-1-select" class="viz"></select>
+<select id="tmc-2-select" class="viz"></select>
+<div id="tmc1-details"></div>
+<div id="tmc2-details"></div>
 <div id="tm-compare-1" class="viz"></div>
 <div id="tm-compare-2" class="viz"></div>
+</div>
+
 <div><p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Animi iste beatae soluta corrupti fuga cumque molestias quaerat eos. Doloribus beatae laudantium corporis sequi autem dicta magnam quas, repellendus corrupti nihil.</p></div>
 <div><p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Odit ad praesentium, minus culpa cumque voluptates excepturi aut, doloremque velit architecto accusamus nihil! Fugit tempora iste minima quaerat eveniet delectus nisi.</p></div>
+<div class="budget-review-overall">
+  <h3>What now?</h3>
+<ul class="budget-review">
+  <li>  Get involved!</li>
+  <li>   Do you have opinions on how community board funds should be allocated? <a href="https://council.nyc.gov/pb/">Check out if your City Council district offers participatory budgeting!</a></li>
+  <li></li>
+  <li></li>
+</ul>
+</div>
+
+
+</main>
 
 <footer>Repository | Whitepaper | Acknowledgments</footer>
 
