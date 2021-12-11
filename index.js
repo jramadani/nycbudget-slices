@@ -125,7 +125,8 @@ function init() {
   fiscyear(state.dhalf1, "#fisc2", "#D69668");
   fiscyear(state.dhalf2, "#fisc3", "#D69668");
   involvement();
-  hbc();
+  hbc(state.hbcdata, "#fiveyrHBC");
+  tenmil();
   // heattable();
   // commenting heattable out temporarily while i get the right data in there
   geomap();
@@ -177,7 +178,13 @@ function core() {
     .attr("width", 15)
     .attr("height", 40)
     .attr("fill", "#5C3C22")
-    .attr("transform", `translate(90, 0)`);
+    .attr("transform", `translate(90, 0)`)
+    .on("mouseover", function () {
+      d3.select(this).attr("fill", "#B19E52");
+    })
+    .on("mouseout", function () {
+      d3.select(this).attr("fill", "#5C3C22");
+    });
 
   svg
     .selectAll(".pieces")
@@ -423,7 +430,13 @@ function tenmil() {
 
   const overarching = state.hbcdata.filter((d) => d.Year == 2021);
 
-  d3.select("#tenmil");
+  // d3.select("#tenmil");
+
+  //the below is temporary
+  hbc(overarching, "#tenmil");
+
+  d3.select("#tenmil rect").attr("height", "70px");
+  d3.select("#tenmil g.tick").remove();
 }
 function balancing() {
   // afair this one may just be for flair?
@@ -431,24 +444,24 @@ function balancing() {
 
 // PART TWO FUNCTIONS:
 
-function hbc() {
+function hbc(data, placement) {
   //axes setup
   const format = (num) => d3.format(".3s")(num).replace(/G/, "B");
 
   const x = d3
     .scaleLinear()
-    .domain([0, d3.max(state.hbcdata, (d) => d.Adopted)])
+    .domain([0, d3.max(data, (d) => d.Adopted)])
     .range([margin.left, width - margin.right]);
 
   const y = d3
     .scaleBand()
-    .domain(d3.range(state.hbcdata.length))
+    .domain(d3.range(data.length))
     .rangeRound([margin.top, height - margin.bottom])
     .padding(0.1);
 
   const yAxis = d3
     .axisLeft(y)
-    .tickFormat((i) => state.hbcdata[i].Year)
+    .tickFormat((i) => data[i].Year)
     .tickSizeOuter(0);
   const xAxis = d3
     .axisTop(x)
@@ -456,14 +469,14 @@ function hbc() {
     .tickFormat(format);
 
   const svg = d3
-    .select("#fiveyrHBC")
+    .select(placement)
     .append("svg")
     .attr("width", width)
     .attr("height", height);
 
   const rect = svg
     .selectAll("rect")
-    .data(state.hbcdata)
+    .data(data)
     .join("rect")
     .attr("x", x(0))
     .attr("y", (d, i) => y(i))
@@ -473,7 +486,7 @@ function hbc() {
 
   const text = svg
     .selectAll("text")
-    .data(state.hbcdata)
+    .data(data)
     .join("text")
     .attr("x", (d) => x(d.Adopted))
     .attr("y", (d, i) => y(i) + y.bandwidth() / 2)
