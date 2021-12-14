@@ -17,6 +17,7 @@ let state = {
   selectedyear: 2017,
   activeCD: [],
   toptenmod: [],
+  index: null,
 };
 
 //load in the data and call the init function
@@ -93,11 +94,14 @@ function init() {
       debug: false,
     })
     .onStepEnter((response) => {
-      console.log(response);
-      step.classed("is-active");
+      console.log(response.index);
+      state.index = response.index;
+      coreupdate();
     })
     .onStepExit((response) => {
       // { element, index, direction }
+      d3.selectAll("#budget-totality .corepieces").attr("fill", "#EEC994");
+      d3.selectAll("#budget-totality text").remove();
     });
 
   //initialize treemap data here:
@@ -162,9 +166,9 @@ function core() {
     },
     { item: "Revenue", descrip: "Revenue description", x: 100, y: 0 },
     { item: "Contract", descrip: "Description", x: 0, y: 150 },
-    { item: "Financial Plan", descrip: "Description", x: 100, y: 150 },
+    { item: "FinancialPlan", descrip: "Description", x: 100, y: 150 },
     { item: "Capital", descrip: "Description", x: 0, y: 300 },
-    { item: "Capital Program", descrip: "Description", x: 100, y: 300 },
+    { item: "CapitalProgram", descrip: "Description", x: 100, y: 300 },
   ];
   console.log(coredata);
   let svg = d3
@@ -175,6 +179,7 @@ function core() {
 
   svg
     .append("rect")
+    .attr("class", "tenyearcap")
     .attr("width", 15)
     .attr("height", 40)
     .attr("fill", "#5C3C22")
@@ -190,6 +195,7 @@ function core() {
     .selectAll(".pieces")
     .data(coredata)
     .join("rect")
+    .attr("class", (d) => d.item + " corepieces")
     .attr("width", 100)
     .attr("height", 150)
     .attr("fill", "#EEC994")
@@ -201,6 +207,39 @@ function core() {
     .on("mouseout", function () {
       d3.select(this).attr("fill", "#EEC994");
     });
+}
+
+function coreupdate() {
+  switch (state.index) {
+    case 0:
+      return updater(".Expense", 20, 60, "Expense");
+    case 1:
+      return updater(".Capital", 20, 360, "Capital");
+    case 2:
+      return updater(".Contract", 20, 210, "Contract");
+    case 3:
+      return updater(".FinancialPlan", 120, 210, "Financial Plan");
+    case 4:
+      return updater(".CapitalProgram", 120, 360, "Capital Program");
+    case 5:
+      return d3.select(".tenyearcap").attr("fill", "#B19E52");
+    case 6:
+      return updater(".Revenue", 120, 60, "Revenue");
+  }
+  function updater(itemclass, x, y, text) {
+    d3.selectAll(itemclass)
+      .attr("fill", "#AC8245")
+      .transition()
+      .duration(2000)
+      .ease(d3.easeLinear);
+
+    d3.selectAll("#budget-totality svg")
+      .append("text")
+      .attr("x", x)
+      .attr("y", y)
+      .text(text)
+      .attr("fill", "white");
+  }
 }
 
 function fiscyear(caldata, placement, color) {
@@ -317,6 +356,29 @@ function fiscyear(caldata, placement, color) {
       (d) => timeWeek.count(d3.utcYear(d), timeWeek.ceil(d)) * cellSize + 10
     )
     .text(formatMonth);
+
+  if (placement == "#fisc2") {
+    svg
+      .append("polygon")
+      .attr("points", "0.5,0.5 118.5,0.5 118.5,438.5 0.5,438.5")
+      .attr("fill", "transparent")
+      .attr("stroke", "black")
+      .attr("stroke-dasharray", 4)
+      .attr("transform", `translate(40.5, 25.5)`);
+
+    svg
+      .append("text")
+      .attr("x", 45.5)
+      .attr("y", 50)
+      .text("This is the previous")
+      .attr("fill", "black");
+    svg
+      .append("text")
+      .attr("x", 45.5)
+      .attr("y", 62)
+      .text("fiscal year!")
+      .attr("fill", "black");
+  }
 }
 
 function involvement() {
@@ -430,16 +492,27 @@ function tenmil() {
 
   const overarching = state.hbcdata.filter((d) => d.Year == 2021);
 
+  const thisdiv = d3
+    .select("#tenmil")
+    .append("div")
+    .style("width", "500px")
+    .style("height", "500px")
+    .style("background-color", "#9ECE96");
+
+  thisdiv
+    .append("div")
+    .style("width", "5px")
+    .style("height", "5px")
+    .style("background-color", "#EEC994")
+    .style("border", "1px dotted black");
+
   // d3.select("#tenmil");
 
   //the below is temporary
-  hbc(overarching, "#tenmil");
+  // hbc(overarching, "#tenmil");
 
-  d3.select("#tenmil rect").attr("height", "70px");
-  d3.select("#tenmil g.tick").remove();
-}
-function balancing() {
-  // afair this one may just be for flair?
+  // d3.select("#tenmil rect").attr("height", "70px");
+  // d3.select("#tenmil g.tick").remove();
 }
 
 // PART TWO FUNCTIONS:
@@ -556,7 +629,6 @@ function comparative(dropdown, location, details, data, default_selection) {
   // dropdown changing
 
   const selectElement = d3.select(dropdown).on("change", function () {
-    // data = this.value; // re-draw the graph based on this new selection
     console.log(this.value);
     const newdata = this.value;
     rolleddata = d3
@@ -578,12 +650,11 @@ function comparative(dropdown, location, details, data, default_selection) {
   // add in dropdown options from the unique values in the data
   selectElement
     .selectAll("option")
-    .data(Array.from(new Set(data.map((d) => d.Agency).sort(d3.ascending)))) // + ADD DATA VALUES FOR DROPDOWN
+    .data(Array.from(new Set(data.map((d) => d.Agency).sort(d3.ascending))))
     .join("option")
     .attr("value", (d) => d)
     .text((d) => d);
 
-  // + SET SELECT ELEMENT'S DEFAULT VALUE (optional)
   selectElement.property("value", default_selection);
 
   let rolleddata = d3
@@ -591,7 +662,6 @@ function comparative(dropdown, location, details, data, default_selection) {
       d3
         .group(
           data.filter((d) => d.Year == 2021 && d.Modified != 0),
-          //you can make the bottom one a variable that matches with a dropdown to switch the data i am a GENIUS
           (d) => d.Agency,
           (d) => d["Expense Category"]
         )
@@ -786,7 +856,8 @@ function geomap() {
     )
     .attr("stroke", "white")
     .on("mouseover", function () {
-      d3.select(this).attr("stroke", "#5C3C22").attr("stroke-width", "3px");
+      const border = d3.select(this);
+      border.raise().attr("stroke", "#5C3C22").attr("stroke-width", "3px");
       state.selectedcd = this.__data__.properties.BoroCD;
       draw();
     })

@@ -123,6 +123,7 @@ table {
   position: sticky;
   top: 0;
   padding-top: 20px;
+  height: 500px;
 }
 #involvement {
   display: grid;
@@ -144,7 +145,7 @@ table {
   font-family: Asap;
   margin: auto;
   list-style-position: outside;
-  width: 50%;
+  width: 60%;
 }
 
 .budget-overview {
@@ -169,7 +170,6 @@ li {
 }
 
 .viz {
-  margin: auto;
   display: grid;
   justify-items: center;
 }
@@ -189,6 +189,7 @@ li {
   z-index: 0;
   justify-items: center;
   grid-column-start: 2;
+  height: 500px;
 }
 
 #scrolly {
@@ -206,6 +207,17 @@ figure p {
   position: absolute;
 }
 
+/* placeholder section for dropdown styling */
+
+select {
+  background-color: #9ece96;
+  padding: 10px;
+  border: none;
+  font-size: 18px;
+  font-family: Asap;
+  margin: 25px;
+}
+
 /* sticky scroll ends */
 
 #comparison-treemaps {
@@ -214,8 +226,15 @@ figure p {
   grid-template-rows: 15% 85%;
 }
 
-/* .is-active {
-  position: sticky;
+#tm-compare-1,
+#tm-compare-2 {
+  margin-top: 40px;
+}
+
+/* the below is for debugging purposes */
+
+/* div {
+  border: 2px solid red;
 } */
 
 /* MOBILE LAYOUT */
