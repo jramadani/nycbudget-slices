@@ -114,24 +114,49 @@ table {
 
 #fiscal-years {
   display: grid;
-  grid-template-columns: 25% 12% 12% 50%;
+  grid-template-columns: 50% 50%;
   justify-items: center;
 }
 
+#fisc-container {
+  display: grid;
+  grid-template-columns: 50% 25% 25%;
+  position: sticky;
+  height: 1000px;
+  top: 0;
+}
+
+#fisc1,
+#fisc2,
+#fisc3 {
+  position: sticky;
+  height: 1000px;
+}
+
 #involved,
-#fiveyrHBC {
+#fiveyrHBC,
+#tenmil {
   position: sticky;
   top: 0;
   padding-top: 20px;
   height: 500px;
 }
-#involvement {
+#involvement,
+#tenmil-container {
   display: grid;
   grid-template-columns: 50% 50%;
 }
 #fiveyr-cont {
   display: grid;
   grid-template-columns: 70% 30%;
+}
+#toptens {
+  display: grid;
+  grid-template-columns: 60% 40%;
+}
+#heatmap td,
+#heatmap th {
+  padding: 10px 40px 10px 40px;
 }
 
 .budget-review-overall {

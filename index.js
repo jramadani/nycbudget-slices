@@ -36,7 +36,7 @@ Promise.all([
   d3.csv("./data/dates-partial-half2.csv", (d) => ({
     date: new Date(d.date),
   })),
-  d3.csv("./data/toptenpct-modified.csv", d3.autoType),
+  d3.csv("./data/toptenpct-mod.csv", d3.autoType),
 ]).then(
   ([geojson, hbcdata, cbdata, tenmil, d21, dhalf1, dhalf2, toptenmod]) => {
     //setting the state with data
@@ -54,38 +54,12 @@ Promise.all([
 );
 
 function init() {
-  //this init function will store the execution of the individual chart functions
-  //this is mostly to control the scroll when that's implemented
-
-  //rework the HTML body for this part
-  //control scroll here
-  const main = d3.select("main");
-  const scrolly = main.select("#scrolly");
-  const figure = scrolly.select("figure");
-  const article = scrolly.select("article");
-  const step = article.selectAll(".step");
+  //this init function will control scroll
+  //and store the execution of the individual chart functions
 
   // instantiate the scrollama
   const scroller = scrollama();
 
-  // generic window resize listener event
-  function handleResize() {
-    // 1. update height of step elements
-    var stepH = Math.floor(window.innerHeight * 0.75);
-    step.style("height", stepH + "px");
-
-    var figureHeight = window.innerHeight / 2;
-    var figureMarginTop = (window.innerHeight - figureHeight) / 2;
-
-    figure
-      .style("height", figureHeight + "px")
-      .style("top", figureMarginTop + "px");
-
-    // 3. tell scrollama to update new element dimensions
-    scroller.resize();
-  }
-
-  // handleResize();
   // setup the instance, pass callback functions
   scroller
     .setup({
@@ -96,12 +70,16 @@ function init() {
     .onStepEnter((response) => {
       console.log(response.index);
       state.index = response.index;
+      //calling the update functions
       coreupdate();
+      calupdate();
     })
     .onStepExit((response) => {
       // { element, index, direction }
+      //resets
       d3.selectAll("#budget-totality .corepieces").attr("fill", "#EEC994");
       d3.selectAll("#budget-totality text").remove();
+      d3.selectAll("#fisc2 rect").attr("fill", "#D69668");
     });
 
   //initialize treemap data here:
@@ -120,18 +98,15 @@ function init() {
     .copy()
     .sum((d) => d.Modified);
 
-  console.log("hierarchical data", tdata1);
-  //first treemap:
-  //second treemap:
-
+  //part one initial function calls
   core();
   fiscyear(state.d21, "#fisc1", "#DCA4B0");
-  fiscyear(state.dhalf1, "#fisc2", "#D69668");
-  fiscyear(state.dhalf2, "#fisc3", "#D69668");
   involvement();
-  hbc(state.hbcdata, "#fiveyrHBC");
   tenmil();
-  // heattable();
+
+  // part two initial function calls
+  hbc(state.hbcdata, "#fiveyrHBC");
+  heattable();
   // commenting heattable out temporarily while i get the right data in there
   geomap();
   treemap(tdata1, "#top-CB-treemap", "#summs");
@@ -244,6 +219,9 @@ function coreupdate() {
 
 function fiscyear(caldata, placement, color) {
   // calendar base from Mike Bostock, adapted for vertical use
+  if (placement == "#fisc2" || placement == "#fisc3") {
+    d3.selectAll(placement + " svg").remove();
+  }
 
   const cellSize = 17;
   weekday = "monday";
@@ -254,6 +232,7 @@ function fiscyear(caldata, placement, color) {
   formatDate = d3.utcFormat("%x");
   formatIso = d3.utcParse("%Y-%m-%dT%H:%M:%S.%LZ");
 
+  //pathMonth has its path-drawing formula reversed for vertical use
   function pathMonth(t) {
     const n = weekday === "weekday" ? 5 : 7;
     const d = Math.max(0, Math.min(n, countDay(t.getUTCDay())));
@@ -270,9 +249,8 @@ function fiscyear(caldata, placement, color) {
   //
 
   let years = d3.groups(caldata, (d) => new Date(d.date).getUTCFullYear());
-  console.log("here are the years", years);
 
-  const container = d3.select(placement).style("position", "relative");
+  const container = d3.select(placement);
 
   let svg = container
     .append("svg")
@@ -505,14 +483,24 @@ function tenmil() {
     .style("height", "5px")
     .style("background-color", "#EEC994")
     .style("border", "1px dotted black");
+}
 
-  // d3.select("#tenmil");
-
-  //the below is temporary
-  // hbc(overarching, "#tenmil");
-
-  // d3.select("#tenmil rect").attr("height", "70px");
-  // d3.select("#tenmil g.tick").remove();
+function calupdate() {
+  if (state.index == 7) {
+    // const timer = d3.timer((elapsed) => {
+    //   d3.select("#elapsed").html(Math.round(elapsed));
+    //   if (elapsed > 10000) timer.stop();
+    // });
+    d3.selectAll("#fisc1 svg").attr("opacity", "0.5");
+    fiscyear(state.dhalf1, "#fisc2", "#D69668");
+    fiscyear(state.dhalf2, "#fisc3", "#D69668");
+  } else if (state.index == 8) {
+    d3.selectAll("#fisc2 rect")
+      .filter(
+        (d) => new Date(d.date).getTime() == new Date("7/1/2021").getTime()
+      )
+      .attr("fill", "#9ECE96");
+  }
 }
 
 // PART TWO FUNCTIONS:
@@ -596,6 +584,8 @@ function heattable() {
   //create table
   //conditional formatting by value
 
+  let columns = ["Agency", "2018", "2019", "2020", "2021"];
+
   //color scale
   const color = d3.scaleSequential((d) => d3.interpolateBuPu(d));
   const format = d3.format(",." + d3.precisionFixed(1) + "f");
@@ -604,22 +594,29 @@ function heattable() {
   thead
     .append("tr")
     .selectAll("th")
-    .data(Object.keys(Object.values(state.pivotcb)[0]))
+    .data(columns)
     .join("th")
     .text((d) => d);
 
   const rows = table
     .append("tbody")
     .selectAll("tr")
-    .data()
-    .join("tr")
-    .style("background-color", (d) => color(d));
+    .data(state.toptenmod)
+    .join("tr");
 
   rows
     .selectAll("td")
-    .data((d) => Object.values(d))
+    .data((d) => {
+      const vals = Object.values(d);
+      const item = vals.pop();
+      vals.unshift(item);
+      return vals;
+    })
     .join("td")
-    .text((d) => (typeof d === "string" ? d : format(d)));
+    .text((d) => d)
+    .style("background-color", (d) =>
+      typeof d != "string" ? color(d) : "none"
+    );
 }
 
 function comparative(dropdown, location, details, data, default_selection) {
@@ -705,8 +702,6 @@ function treemap(wrappeddata, element, item, reusable) {
 
   let root = wrappeddata;
 
-  console.log("hierarchy test", root.leaves());
-
   let tree = d3
     .treemap()
     .size([localwidth / 2.5, height])
@@ -770,7 +765,6 @@ function geomap() {
   //data formatting
 
   const years = Array.from(new Set(state.cbdata.map((d) => d.Year)));
-  console.log(years);
 
   //set up range slider
 
