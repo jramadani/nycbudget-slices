@@ -18,6 +18,6 @@
   "homepage": "https://github.com/jramadani/nycbudget-slices#readme",
   "dependencies": {
     "d3": "^7.1.1",
-    "scrollama": "^3.0.1"
+    "scrollama": "^2.2.3"
   }
 }

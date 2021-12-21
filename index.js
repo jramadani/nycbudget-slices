@@ -57,6 +57,7 @@ function init() {
   //this init function will control scroll
   //and store the execution of the individual chart functions
 
+  //scrollama code from official documentation - https://github.com/russellgoldenberg/scrollama
   // instantiate the scrollama
   const scroller = scrollama();
 
@@ -64,8 +65,8 @@ function init() {
   scroller
     .setup({
       step: ".step",
-      offset: 0.2,
-      debug: false,
+      offset: 0.3,
+      debug: true,
     })
     .onStepEnter((response) => {
       console.log(response.index);
@@ -73,6 +74,15 @@ function init() {
       //calling the update functions
       coreupdate();
       calupdate();
+      if (state.index == 7 && response.direction == "up") {
+        d3.selectAll("#fisc1 svg").attr("opacity", 1);
+        d3.selectAll("#fisc2 svg").remove();
+        d3.selectAll("#fisc3 svg").remove();
+      }
+      involveUpdate();
+      if (state.index == 26) {
+        hbc(state.hbcdata, "#fiveyrHBC");
+      }
     })
     .onStepExit((response) => {
       // { element, index, direction }
@@ -80,6 +90,7 @@ function init() {
       d3.selectAll("#budget-totality .corepieces").attr("fill", "#EEC994");
       d3.selectAll("#budget-totality text").remove();
       d3.selectAll("#fisc2 rect").attr("fill", "#D69668");
+      d3.selectAll("#fisc3 rect").attr("fill", "#D69668");
     });
 
   //initialize treemap data here:
@@ -105,9 +116,8 @@ function init() {
   tenmil();
 
   // part two initial function calls
-  hbc(state.hbcdata, "#fiveyrHBC");
+
   heattable();
-  // commenting heattable out temporarily while i get the right data in there
   geomap();
   treemap(tdata1, "#top-CB-treemap", "#summs");
   comparative(
@@ -356,6 +366,12 @@ function fiscyear(caldata, placement, color) {
       .attr("y", 62)
       .text("fiscal year!")
       .attr("fill", "black");
+
+    svg.classed("prefade fadein", true);
+  }
+
+  if (placement == "#fisc3") {
+    svg.classed("prefade fadein", true);
   }
 }
 
@@ -366,55 +382,169 @@ function involvement() {
       {
         id: 1,
         name: "Mayor",
-        color: "#D69668",
+        color: "#9ECE96",
+        phase: "one",
       },
       {
         id: 2,
         name: "City Council",
-        color: "#9ECE96",
+        color: "#DCA4B0",
+        phase: "one",
       },
       {
         id: 3,
+        name: "Office of Management and Budget",
+        color: "#9ECE96",
+        phase: "two",
+      },
+      {
+        id: 4,
         name: "Lobbyists",
-        color: "#DCA4B0",
+        color: "#D69668",
+        phase: "three",
+      },
+      {
+        id: 5,
+        name: "Activist Groups",
+        color: "#D69668",
+        phase: "three",
+      },
+      {
+        id: 6,
+        name: "Other Interested Parties",
+        color: "#D69668",
+        phase: "three",
+      },
+      {
+        id: 7,
+        name: "You!",
+        color: "#D69668",
+        phase: "four",
       },
     ],
     links: [
       {
         source: 1,
         target: 2,
+        phase: "one",
       },
       {
         source: 2,
         target: 1,
+        phase: "one",
       },
       {
         source: 3,
         target: 1,
+        phase: "two",
       },
       {
         source: 3,
         target: 2,
+        phase: "two",
+      },
+      {
+        source: 4,
+        target: 1,
+        phase: "three",
+      },
+      {
+        source: 4,
+        target: 2,
+        phase: "three",
+      },
+      {
+        source: 5,
+        target: 1,
+        phase: "three",
+      },
+      {
+        source: 5,
+        target: 2,
+        phase: "three",
+      },
+      {
+        source: 6,
+        target: 1,
+        phase: "three",
+      },
+      {
+        source: 6,
+        target: 2,
+        phase: "three",
+      },
+      {
+        source: 7,
+        target: 1,
+        phase: "four",
+      },
+      {
+        source: 7,
+        target: 2,
+        phase: "four",
+      },
+      {
+        source: 7,
+        target: 3,
+        phase: "four",
+      },
+      {
+        source: 7,
+        target: 4,
+        phase: "four",
       },
     ],
   };
-
-  // for 12/4 - nodes aren't showing where they need to, double check the positioning/force
-  //nodemap
-
+  //set up the svg
   const svg = d3
     .select("#involved")
     .append("svg")
     .attr("width", width)
     .attr("height", height);
 
+  //add legend
+
+  svg
+    .append("rect")
+    .attr("width", 10)
+    .attr("height", 10)
+    .attr("fill", "#9ECE96")
+    .attr("transform", `translate(10, 10)`);
+  svg.append("text").attr("dx", 25).attr("dy", 20).text("Executive");
+  svg
+    .append("rect")
+    .attr("width", 10)
+    .attr("height", 10)
+    .attr("fill", "#DCA4B0")
+    .attr("transform", `translate(100, 10)`);
+  svg.append("text").attr("dx", 115).attr("dy", 20).text("Legislative");
+  svg
+    .append("rect")
+    .attr("width", 10)
+    .attr("height", 10)
+    .attr("fill", "#D69668")
+    .attr("transform", `translate(200, 10)`);
+  svg
+    .append("text")
+    .attr("dx", 215)
+    .attr("dy", 20)
+    .text("Non-government entities");
+
+  // add a section for identifying the entity
+
+  d3.select("#involved").append("p").attr("id", "entityid");
+
+  //nodemap
+
   // Initialize the links
   const link = svg
     .selectAll("line")
     .data(parties.links)
     .join("line")
+    .attr("class", (d) => d.phase)
     .style("stroke", "#aaa")
-    .style("stroke-style", "dashed");
+    .style("stroke-style", "dashed")
+    .style("visibility", "hidden");
 
   // Initialize the nodes
   const node = svg
@@ -422,7 +552,16 @@ function involvement() {
     .data(parties.nodes)
     .join("circle")
     .attr("r", 20)
-    .attr("fill", (d) => d.color);
+    .attr("fill", (d) => d.color)
+    .attr("class", (d) => d.phase)
+    .style("visibility", "hidden")
+    .on("mouseover", function () {
+      d3.select("#entityid").html(`${this.__data__.name}`);
+      d3.select(this).attr("stroke", "#180D05").attr("stroke-width", "5px");
+    })
+    .on("mouseout", function () {
+      d3.select(this).attr("stroke", "none");
+    });
 
   const simulation = d3
     .forceSimulation(parties.nodes) // Force algorithm is applied to data.nodes
@@ -433,11 +572,11 @@ function involvement() {
         .id((d) => d.id)
         .links(parties.links) // and this the list of links
     )
-    .force("charge", d3.forceManyBody().strength(-400)) // This adds repulsion between nodes. Play with the -400 for the repulsion strength
+    .force("charge", d3.forceManyBody().strength(-700)) // This adds repulsion between nodes. Play with the -400 for the repulsion strength
     .force("center", d3.forceCenter(width / 2, height / 2)) // This force attracts nodes to the center of the svg area
     .on("end", ticked);
 
-  // This function is run at each iteration of the force algorithm, updating the nodes position.
+  // this updates the node position
   function ticked() {
     link
       .attr("x1", function (d) {
@@ -485,27 +624,109 @@ function tenmil() {
     .style("border", "1px dotted black");
 }
 
+//step update functions
+
 function calupdate() {
-  if (state.index == 7) {
-    // const timer = d3.timer((elapsed) => {
-    //   d3.select("#elapsed").html(Math.round(elapsed));
-    //   if (elapsed > 10000) timer.stop();
-    // });
-    d3.selectAll("#fisc1 svg").attr("opacity", "0.5");
+  //initial if statement calls multiple items so isn't in the switch-case
+  if (state.index == 8) {
+    d3.selectAll("#fisc1 svg").attr("opacity", "0.3");
     fiscyear(state.dhalf1, "#fisc2", "#D69668");
     fiscyear(state.dhalf2, "#fisc3", "#D69668");
-  } else if (state.index == 8) {
-    d3.selectAll("#fisc2 rect")
-      .filter(
-        (d) => new Date(d.date).getTime() == new Date("7/1/2021").getTime()
-      )
-      .attr("fill", "#9ECE96");
+    d3.selectAll("#fisc2 svg").classed("prefade", false);
+    d3.selectAll("#fisc3 svg").classed("prefade", false);
+  }
+  // the below are in a switch-case because they include one line executables
+
+  switch (state.index) {
+    case 9:
+      return calcolorupdate("#fisc2 rect", "7/1/2021");
+    case 10:
+      return calcolorupdate("#fisc2 rect", "9/3/2021");
+    case 11:
+      return calcolorupdate("#fisc2 rect", "10/31/2021");
+    case 12:
+      return calcolorupdate("#fisc2 rect", "12/31/2021");
+    case 13:
+      return calcolorupdate("#fisc3 rect", "1/16/2022");
+    case 14:
+      return calColorRange("#fisc3 rect", "01/16/2022", "02/16/2022");
+    case 15:
+      return calcolorupdate("#fisc3 rect", "2/25/2022");
+    case 16:
+      return calcolorupdate("#fisc3 rect", "3/10/2022");
+    case 17:
+      return calcolorupdate("#fisc3 rect", "3/25/2022");
+    case 18:
+      return calcolorupdate("#fisc3 rect", "4/26/2022");
+    case 19:
+      return calColorRange("#fisc3 rect", "5/6/2022", "5/25/2022");
+    case 20:
+      return calcolorupdate("#fisc3 rect", "6/5/2022");
+    case 21:
+      return calcolorupdate("#fisc3 rect", "6/30/2022");
+  }
+}
+
+//calcolorupdate and calColorRange select the div and all of its rects
+//compare the dates to the given date, and then change the fill color
+//the first function is for singular dates, the second is for ranges
+
+function calcolorupdate(selecting, datecompare) {
+  d3.selectAll(selecting)
+    .filter(
+      (d) => new Date(d.date).getTime() == new Date(datecompare).getTime()
+    )
+    .attr("fill", "#9ECE96");
+}
+
+function calColorRange(selecting, first, last) {
+  //create array of dates
+  const start = new Date(first);
+  const end = new Date(last);
+  const dt = new Date(start);
+  const thismonth = [];
+
+  while (dt <= end) {
+    thismonth.push(new Date(dt).getTime());
+    dt.setDate(dt.getDate() + 1);
+  }
+  //then:
+  return d3
+    .selectAll(selecting)
+    .filter((d) => thismonth.includes(new Date(d.date).getTime()))
+    .attr("fill", "#9ECE96");
+}
+
+function involveUpdate() {
+  switch (state.index) {
+    case 22:
+      return d3
+        .selectAll(".one")
+        .classed(".one fadein", true)
+        .style("visibility", "visible");
+    case 23:
+      return d3
+        .selectAll(".two")
+        .classed(".two fadein", true)
+        .style("visibility", "visible");
+    case 24:
+      return d3
+        .selectAll(".three")
+        .classed(".three fadein", true)
+        .style("visibility", "visible");
+    case 25:
+      return d3
+        .selectAll(".four")
+        .classed(".four fadein", true)
+        .style("visibility", "visible");
   }
 }
 
 // PART TWO FUNCTIONS:
 
 function hbc(data, placement) {
+  d3.selectAll(placement + " svg").remove();
+
   //axes setup
   const format = (num) => d3.format(".3s")(num).replace(/G/, "B");
 
@@ -541,9 +762,18 @@ function hbc(data, placement) {
     .join("rect")
     .attr("x", x(0))
     .attr("y", (d, i) => y(i))
-    .attr("width", (d) => x(d.Adopted) - x(0))
+    .attr("width", 0)
     .attr("height", y.bandwidth())
     .attr("fill", "#9ECE96");
+
+  // might be able to use this part to figure out the transition?
+  // or might need to use a draw function
+  svg
+    .selectAll(placement + " rect")
+    .transition()
+    .duration(5000)
+    .attr("width", (d) => x(d.Adopted) - x(0))
+    .delay((d, i) => i * 500);
 
   const text = svg
     .selectAll("text")
@@ -626,7 +856,8 @@ function comparative(dropdown, location, details, data, default_selection) {
   // dropdown changing
 
   const selectElement = d3.select(dropdown).on("change", function () {
-    console.log(this.value);
+    //remove existing treemap
+    d3.select(location + " .treemapped").remove();
     const newdata = this.value;
     rolleddata = d3
       .hierarchy(
@@ -676,7 +907,7 @@ function treemap(wrappeddata, element, item, reusable) {
 
   const localwidth = window.innerWidth;
   if (reusable) {
-    d3.selectAll(`${reusable} svg`).remove();
+    d3.selectAll(`${reusable} .treemapped`).remove();
   }
   //wrappeddata is the data in its final state, pulled into this function
   //the data should be hierarchical
@@ -689,16 +920,17 @@ function treemap(wrappeddata, element, item, reusable) {
     .range([0.25, 1]);
 
   let color = d3.scaleSequential((d) => d3.interpolateGreens(scale(d)));
-
   let format = d3.format(",d");
 
   //select the html element
 
   let svg = d3
     .select(element)
-    .append("svg")
-    .attr("width", localwidth / 2.5)
-    .attr("height", height);
+    .append("div")
+    .attr("class", "treemapped")
+    .style("width", `${localwidth / 2.5}px`)
+    .style("height", `${height}px`)
+    .style("position", "relative");
 
   let root = wrappeddata;
 
@@ -710,18 +942,17 @@ function treemap(wrappeddata, element, item, reusable) {
 
   tree(root);
 
-  let leaf = svg
-    .selectAll("g")
-    .data(root.leaves())
-    .join("g")
-    .attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+  let leaf = svg.selectAll("div").data(root.leaves()).join("g");
 
   leaf
-    .append("rect")
-    .attr("stroke", "white")
-    .attr("fill", (d) => color(d.value))
-    .attr("width", (d) => d.x1 - d.x0)
-    .attr("height", (d) => d.y1 - d.y0)
+    .append("div")
+    .style("border", "white")
+    .style("background-color", (d) => color(d.value))
+    .style("width", (d) => `${d.x1 - d.x0}px`)
+    .style("height", (d) => `${d.y1 - d.y0}px`)
+    .style("position", "absolute")
+    .style("top", (d) => `${d.y0}px`)
+    .style("left", (d) => `${d.x0}px`)
     .on("mouseover", function () {
       d3.select(item).html(
         `<p>${this.__data__.data.Agency}<br><br>${
@@ -733,32 +964,25 @@ function treemap(wrappeddata, element, item, reusable) {
       );
     });
 
-  svg
-    .selectAll("text")
-    .data(root.leaves())
-    .enter()
-    .append("text")
-    .attr("x", (d) => d.x0 + 5)
-    .attr("y", (d) => d.y0 + 30)
-    .text((d) => d.data["Expense Category"])
-    .attr("font-size", (d) => `${logScale((d.x1 - d.x0) * (d.y1 - d.y0))}em`)
-    .attr("font-family", "Asap")
-    .attr("fill", "white");
-
-  svg
-    .selectAll("values")
-    .data(root.leaves())
-    .enter()
-    .append("text")
-    .attr("x", (d) => d.x0 + 5)
-    .attr("y", (d) => d.y0 + 55)
-    .text((d) => format(Number(Math.round(d.value + "e2") + "e-2")))
-    .attr(
-      "font-size",
-      (d) => `${logScale((d.x1 - d.x0) * (d.y1 - d.y0)) - 0.1}em`
+  leaf
+    .append("span")
+    .html(
+      (d) =>
+        `${d.data["Expense Category"]} <br> ${format(
+          Number(Math.round(d.value + "e2") + "e-2")
+        )}`
     )
-    .attr("font-family", "Asap")
-    .attr("fill", "white");
+    .style("font-size", (d) => `${logScale((d.x1 - d.x0) * (d.y1 - d.y0))}em`)
+    .style("font-family", "Asap")
+    .style(
+      "color",
+      "white"
+      // (d) => (isDark(color(d.value)) ? "white" : "black")
+    )
+    .style("position", "absolute")
+    .style("top", (d) => `${d.y0}px`)
+    .style("left", (d) => `${d.x0}px`)
+    .style("padding", "10px");
 }
 
 function geomap() {
@@ -904,6 +1128,9 @@ function draw() {
 function supplementaltrend(data) {
   // for an area graph per community board
   d3.selectAll("#cbarea").remove();
+
+  const width = 500;
+  const height = 300;
 
   const yearFormat = d3.format(".4");
 
