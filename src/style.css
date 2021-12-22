@@ -105,12 +105,11 @@ button {
   padding: 15px;
 }
 
-#heatmap {
-  margin-left: 50px;
-}
-table {
-  width: 50%;
-  text-align: center;
+/*table styling section*/
+
+td {
+  padding: 5px 10px 5px 10px;
+  text-align: right;
 }
 
 #fiscal-years {
@@ -136,7 +135,8 @@ table {
 
 #involved,
 #fiveyrHBC,
-#tenmil {
+#tenmil,
+#sani-cal {
   position: sticky;
   top: 0;
   padding-top: 20px;
@@ -147,17 +147,14 @@ table {
   display: grid;
   grid-template-columns: 50% 50%;
 }
-#fiveyr-cont {
+#fiveyr-cont,
+#tenmil-vizzes {
   display: grid;
   grid-template-columns: 70% 30%;
 }
 #toptens {
   display: grid;
   grid-template-columns: 60% 40%;
-}
-#heatmap td,
-#heatmap th {
-  padding: 10px 40px 10px 40px;
 }
 
 .budget-review-overall {
@@ -198,6 +195,13 @@ li {
 .viz {
   display: grid;
   justify-items: center;
+}
+
+.instructions {
+  font-size: 18px;
+  padding: 30px;
+  text-align: center;
+  width: 1000px;
 }
 
 /* implementing the sticky scroll */
@@ -288,7 +292,7 @@ select {
   width: 23px;
   height: 24px;
   border: 0;
-  background: url("./assets/appleslider.svg");
+  background: url("../assets/appleslider.svg");
   background-repeat: no-repeat;
   background-size: contain;
   cursor: pointer;
@@ -298,7 +302,7 @@ select {
   width: 23px;
   height: 24px;
   border: 0;
-  background: url("./assets/appleslider.svg");
+  background: url("../assets/appleslider.svg");
   background-repeat: no-repeat;
   background-size: contain;
   cursor: pointer;
@@ -307,14 +311,30 @@ select {
 #entityid {
   padding-top: 0px;
 }
+#toptreecontainer,
+#jitter-container {
+  position: relative;
+}
 
 #summs,
-#tmc-1-details,
-#tmc-2-details {
+#tmc1-details,
+#tmc2-details,
+#jitter-tooltip {
   position: absolute;
   visibility: hidden;
-  top: 0;
-  left: 0;
+  background-color: #eec994;
+  border-radius: 5px;
+  color: #5c3c22;
+  padding: 20px;
+  width: 300px;
+  line-height: 150%;
+  z-index: 99999;
+}
+
+#tmc-1-select,
+#tmc-2-select {
+  width: 50%;
+  place-items: center;
 }
 
 /*fade-in*/

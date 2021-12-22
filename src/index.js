@@ -17,28 +17,43 @@ let state = {
   selectedyear: 2017,
   activeCD: [],
   toptenmod: [],
+  commboardtotals: [],
+  commsmod: [],
   index: null,
 };
 
 //load in the data and call the init function
 
 Promise.all([
-  d3.json("./data/cd-boundaries-albers.geojson", d3.autoType),
-  d3.csv("./data/adoptedtotal.csv", d3.autoType),
-  d3.csv("./data/commboards.csv", d3.autoType),
-  d3.csv("./data/tenmil.csv", d3.autoType),
-  d3.csv("./data/dates21.csv", (d) => ({
+  d3.json("../data/cd-boundaries-albers.geojson", d3.autoType),
+  d3.csv("../data/adoptedtotal.csv", d3.autoType),
+  d3.csv("../data/commboards.csv", d3.autoType),
+  d3.csv("../data/tenmil-withpercent.csv", d3.autoType),
+  d3.csv("../data/dates21.csv", (d) => ({
     date: new Date(d.date),
   })),
-  d3.csv("./data/dates-partial-half1.csv", (d) => ({
+  d3.csv("../data/dates-partial-half1.csv", (d) => ({
     date: new Date(d.date),
   })),
-  d3.csv("./data/dates-partial-half2.csv", (d) => ({
+  d3.csv("../data/dates-partial-half2.csv", (d) => ({
     date: new Date(d.date),
   })),
-  d3.csv("./data/toptenpct-mod.csv", d3.autoType),
+  d3.csv("../data/topten-mod-total.csv", d3.autoType),
+  d3.csv("../data/commboard-totals.csv", d3.autoType),
+  d3.csv("../data/commsmod.csv", d3.autoType),
 ]).then(
-  ([geojson, hbcdata, cbdata, tenmil, d21, dhalf1, dhalf2, toptenmod]) => {
+  ([
+    geojson,
+    hbcdata,
+    cbdata,
+    tenmil,
+    d21,
+    dhalf1,
+    dhalf2,
+    toptenmod,
+    commboardtotals,
+    commsmod,
+  ]) => {
     //setting the state with data
     state.geojson = geojson;
     state.hbcdata = hbcdata;
@@ -48,6 +63,8 @@ Promise.all([
     state.dhalf1 = dhalf1;
     state.dhalf2 = dhalf2;
     state.toptenmod = toptenmod;
+    state.commboardtotals = commboardtotals;
+    state.commsmod = commsmod;
     console.log("state: ", state);
     init();
   }
@@ -66,7 +83,7 @@ function init() {
     .setup({
       step: ".step",
       offset: 0.3,
-      debug: true,
+      debug: false,
     })
     .onStepEnter((response) => {
       console.log(response.index);
@@ -80,9 +97,27 @@ function init() {
         d3.selectAll("#fisc3 svg").remove();
       }
       involveUpdate();
-      if (state.index == 26) {
-        hbc(state.hbcdata, "#fiveyrHBC");
+      switch (state.index) {
+        case 26:
+          d3.selectAll("#sani-cal svg").remove();
+          fiscyear(state.d21, "#sani-cal", "#DCA4B0");
+          calColorRange("#sani-cal rect", "1/1/2021", "1/7/2021");
+          d3.selectAll("#sani-cal svg").classed("prefade", false);
+        case 28:
+          return hbc(state.hbcdata, "#fiveyrHBC");
       }
+      if (state.index == 27 && response.direction == "down") {
+        d3.selectAll("#sani-cal svg").remove();
+      }
+
+      // if (state.index == 26) {
+      //   d3.selectAll("#sani-cal svg").remove();
+      //   fiscyear(state.d21, "#sani-cal", "#DCA4B0");
+      //   calColorRange("#sani-cal rect", "1/1/2021", "1/7/2021");
+      // }
+      // if (state.index == 27) {
+      //   hbc(state.hbcdata, "#fiveyrHBC");
+      // }
     })
     .onStepExit((response) => {
       // { element, index, direction }
@@ -117,8 +152,18 @@ function init() {
 
   // part two initial function calls
 
-  heattable();
+  heattable(
+    "#heatmap",
+    ["Budget Agency", "2017", "2018", "2019", "2020", "2021"],
+    state.toptenmod
+  );
+  heattable(
+    "#heatmap2",
+    ["Community Board Borough", "2017", "2018", "2019", "2020", "2021"],
+    state.commboardtotals
+  );
   geomap();
+  jitterplot();
   treemap(tdata1, "#top-CB-treemap", "#summs");
   comparative(
     "#tmc-1-select",
@@ -370,7 +415,7 @@ function fiscyear(caldata, placement, color) {
     svg.classed("prefade fadein", true);
   }
 
-  if (placement == "#fisc3") {
+  if (placement == "#fisc3" || placement == "#sani-cal") {
     svg.classed("prefade fadein", true);
   }
 }
@@ -532,7 +577,10 @@ function involvement() {
 
   // add a section for identifying the entity
 
-  d3.select("#involved").append("p").attr("id", "entityid");
+  d3.select("#involved")
+    .append("p")
+    .attr("id", "entityid")
+    .html(`Interact with one of the entities to find out who it is!`);
 
   //nodemap
 
@@ -605,9 +653,7 @@ function involvement() {
 function tenmil() {
   // first set up the single bar--there should be highlights for each?
   // then set up the items--how many items equal the 10 mil?
-  //may need to outline this one
-
-  const overarching = state.hbcdata.filter((d) => d.Year == 2021);
+  // may need to outline this one
 
   const thisdiv = d3
     .select("#tenmil")
@@ -622,6 +668,9 @@ function tenmil() {
     .style("height", "5px")
     .style("background-color", "#EEC994")
     .style("border", "1px dotted black");
+
+  // create bars for the categories
+  // use the percentages to calculate width of total
 }
 
 //step update functions
@@ -810,16 +859,18 @@ function hbc(data, placement) {
   d3.selectAll("path.domain").remove();
 }
 
-function heattable() {
+function heattable(placement, columns, data) {
   //create table
   //conditional formatting by value
 
-  let columns = ["Agency", "2018", "2019", "2020", "2021"];
-
   //color scale
-  const color = d3.scaleSequential((d) => d3.interpolateBuPu(d));
-  const format = d3.format(",." + d3.precisionFixed(1) + "f");
-  const table = d3.select("#heatmap").append("table");
+  const color = d3
+    .scaleSequential()
+    .domain([917436, 29169188823])
+    .range(["#EEC994", "#D0786D", "#700D03"]);
+  // const format = d3.format(",d");
+  const format = (num) => d3.format(".3s")(num).replace(/G/, "B");
+  const table = d3.select(placement).append("table");
   const thead = table.append("thead");
   thead
     .append("tr")
@@ -828,11 +879,7 @@ function heattable() {
     .join("th")
     .text((d) => d);
 
-  const rows = table
-    .append("tbody")
-    .selectAll("tr")
-    .data(state.toptenmod)
-    .join("tr");
+  const rows = table.append("tbody").selectAll("tr").data(data).join("tr");
 
   rows
     .selectAll("td")
@@ -840,10 +887,11 @@ function heattable() {
       const vals = Object.values(d);
       const item = vals.pop();
       vals.unshift(item);
+      console.log(vals);
       return vals;
     })
     .join("td")
-    .text((d) => d)
+    .text((d) => (typeof d != "string" ? format(d) : d))
     .style("background-color", (d) =>
       typeof d != "string" ? color(d) : "none"
     );
@@ -881,7 +929,8 @@ function comparative(dropdown, location, details, data, default_selection) {
     .data(Array.from(new Set(data.map((d) => d.Agency).sort(d3.ascending))))
     .join("option")
     .attr("value", (d) => d)
-    .text((d) => d);
+    .text((d) => d)
+    .style("font-family", "Asap");
 
   selectElement.property("value", default_selection);
 
@@ -953,15 +1002,29 @@ function treemap(wrappeddata, element, item, reusable) {
     .style("position", "absolute")
     .style("top", (d) => `${d.y0}px`)
     .style("left", (d) => `${d.x0}px`)
-    .on("mouseover", function () {
-      d3.select(item).html(
-        `<p>${this.__data__.data.Agency}<br><br>${
-          this.__data__.data["Expense Category"]
-        }<br>
+    .on("mouseover", function (e) {
+      d3.select(item)
+        .html(
+          `${this.__data__.data.Agency}<br><br>${
+            this.__data__.data["Expense Category"]
+          }<br>
         <br>$${format(
           Number(Math.round(this.__data__.data.Modified + "e2") + "e-2")
-        )}</p>`
-      );
+        )}`
+        )
+        .style("visibility", "visible")
+        .style(
+          "transform",
+          `translate(${
+            this.__data__.x0 + (this.__data__.x1 - this.__data__.x0) / 2
+          }px, ${
+            this.__data__.y0 + (this.__data__.y1 - this.__data__.y0) / 2
+          }px)`
+        )
+        .style("padding", "20px");
+    })
+    .on("mouseout", function () {
+      d3.select(item).style("visibility", "hidden");
     });
 
   leaf
@@ -1197,5 +1260,98 @@ function supplementaltrend(data) {
     .attr("dy", "1em")
     .style("text-anchor", "middle")
     .text("Budget Allocation ($)")
+    .attr("fill", "#5C3C22");
+}
+
+function jitterplot() {
+  //local constants
+  const width = 800;
+  const margin = { top: 25, right: 20, bottom: 35, left: 70 };
+  let format = d3.format(",d");
+  //scales
+  const x = d3
+    .scaleBand()
+    .domain(state.commsmod.map((d) => d.Borough))
+    .range([margin.left, width - margin.right]);
+
+  const y = d3
+    .scaleLinear()
+    .domain(d3.extent(state.commsmod, (d) => d.Modified))
+    .nice()
+    .range([height - margin.bottom, margin.top]);
+  //axes
+  const xAxis = d3.axisBottom(x);
+  const yAxis = d3.axisLeft(y);
+
+  //color
+
+  const color = d3.scaleOrdinal(
+    Array.from(new Set(state.commsmod.map((d) => d.Borough))),
+    ["#DCA4B0", "#D0786D", "#D69668", "#9ECE96", "#B19E52"]
+  );
+
+  //build visual
+  const svg = d3
+    .select("#jitterplot")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+  svg
+    .append("g")
+    .selectAll("circle")
+    .data(state.commsmod)
+    .join("circle")
+    .attr("cx", (d) => x(d.Borough) + margin.left - 10 + Math.random() * 20)
+    .attr("cy", (d) => y(d.Modified))
+    .attr("r", 3)
+    .attr("stroke", "none")
+    .attr("fill", (d) => color(d.Borough))
+    .on("mouseover", function () {
+      d3.select(this).attr("stroke", "#180D05").attr("stroke-width", 2);
+      d3.select("#jitter-tooltip")
+        .html(
+          `In ${this.__data__.Year}, ${
+            this.__data__.Agency
+          } received a total of $${format(
+            Number(Math.round(this.__data__.Modified + "e2") + "e-2")
+          )} in allocated funds.`
+        )
+        .style("visibility", "visible")
+        .style(
+          "transform",
+          `translate(${+this.attributes.cx.value + 400 + margin.left}px, ${+this
+            .attributes.cy.value}px)`
+        );
+    })
+    .on("mouseout", function () {
+      d3.select(this).attr("stroke", "none");
+      d3.select("#jitter-tooltip").style("visibility", "hidden");
+    });
+  //call axes
+
+  svg
+    .append("g")
+    .attr("class", "axis x-axis")
+    .attr("transform", `translate(0,${height - margin.bottom})`)
+    .call(xAxis)
+    .append("text")
+    .attr("class", "axis-label")
+    .attr("x", "50%")
+    .attr("dy", "3em")
+    .attr("fill", "#259D98");
+
+  svg
+    .append("g")
+    .attr("class", "axis y-axis")
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(yAxis)
+    .append("text")
+    .attr("transform", "rotate(0)")
+    .attr("y", 0)
+    .attr("x", 0)
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .text("Modified Budget Allocation ($)")
     .attr("fill", "#5C3C22");
 }
