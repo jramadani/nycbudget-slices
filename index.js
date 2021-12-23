@@ -25,22 +25,22 @@ let state = {
 //load in the data and call the init function
 
 Promise.all([
-  d3.json("../data/cd-boundaries-albers.geojson", d3.autoType),
-  d3.csv("../data/adoptedtotal.csv", d3.autoType),
-  d3.csv("../data/commboards.csv", d3.autoType),
-  d3.csv("../data/tenmil-withpercent.csv", d3.autoType),
-  d3.csv("../data/dates21.csv", (d) => ({
+  d3.json("./data/cd-boundaries-albers.geojson", d3.autoType),
+  d3.csv("./data/adoptedtotal.csv", d3.autoType),
+  d3.csv("./data/commboards.csv", d3.autoType),
+  d3.csv("./data/tenmil-withpercent.csv", d3.autoType),
+  d3.csv("./data/dates21.csv", (d) => ({
     date: new Date(d.date),
   })),
-  d3.csv("../data/dates-partial-half1.csv", (d) => ({
+  d3.csv("./data/dates-partial-half1.csv", (d) => ({
     date: new Date(d.date),
   })),
-  d3.csv("../data/dates-partial-half2.csv", (d) => ({
+  d3.csv("./data/dates-partial-half2.csv", (d) => ({
     date: new Date(d.date),
   })),
-  d3.csv("../data/topten-mod-total.csv", d3.autoType),
-  d3.csv("../data/commboard-totals.csv", d3.autoType),
-  d3.csv("../data/commsmod.csv", d3.autoType),
+  d3.csv("./data/topten-mod-total.csv", d3.autoType),
+  d3.csv("./data/commboard-totals.csv", d3.autoType),
+  d3.csv("./data/commsmod.csv", d3.autoType),
 ]).then(
   ([
     geojson,

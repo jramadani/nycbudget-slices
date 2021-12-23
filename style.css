@@ -293,7 +293,7 @@ select {
   width: 23px;
   height: 24px;
   border: 0;
-  background: url("../assets/appleslider.svg");
+  background: url("./assets/appleslider.svg");
   background-repeat: no-repeat;
   background-size: contain;
   cursor: pointer;
@@ -303,7 +303,7 @@ select {
   width: 23px;
   height: 24px;
   border: 0;
-  background: url("../assets/appleslider.svg");
+  background: url("./assets/appleslider.svg");
   background-repeat: no-repeat;
   background-size: contain;
   cursor: pointer;
