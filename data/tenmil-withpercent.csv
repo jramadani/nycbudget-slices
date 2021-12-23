@@ -1,14 +1,14 @@
-division,part,total,unit,percent
-Child Care,1340,65607,child care vouchers,2.042464981
-Education,116,77000,teachers,0.150649351
-Environment,86000000,430000000,gallons of wastewater treated per year,20
-Fire,6,197,ladder trucks,3.045685279
-Homeless Services,211,2110,individuals sheltered for a year,10
-Jails,1.5,365,"days of incarcerating 5,481 people in city jails",0.410958904
-Parks,594,1414,summer pool and beach season lifeguards,42.00848656
-Police,58,24600,police officers per year,0.235772358
-Public Assistance,1872,164000,annual safety net assistance grant recipients,1.141463415
-Sanitation,7,365,days of residential garbage pickup,1.917808219
-Seniors,11000000,46000000,home delivered meals,23.91304348
-Street Resurfacing,57,1140,lane-miles of city streets,5
-Small Business Services,7124,25442,job placements through Workforce1 Career Centers,28.00094332
+division,part,total,unit,percent,unitprice,totalprice
+Child Care,1340,65607,child care vouchers,2.042464981,7462.686567,489604477.6
+Education,116,77000,teachers,0.150649351,86206.89655,6637931034
+Environment,86000000,430000000,gallons of wastewater treated per year,20,0.11627907,50000000
+Fire,6,197,ladder trucks,3.045685279,1666666.667,328333333.3
+Homeless Services,211,2110,individuals sheltered for a year,10,47393.36493,100000000
+Jails,1.5,365,"days of incarcerating 5,481 people in city jails",0.410958904,6666666.667,2433333333
+Parks,594,1414,summer pool and beach season lifeguards,42.00848656,16835.01684,23804713.8
+Police,58,24600,police officers per year,0.235772358,172413.7931,4241379310
+Public Assistance,1872,164000,annual safety net assistance grant recipients,1.141463415,5341.880342,876068376.1
+Sanitation,7,365,days of residential garbage pickup,1.917808219,1428571.429,521428571.4
+Seniors,11000000,46000000,home delivered meals,23.91304348,0.909090909,41818181.82
+Street Resurfacing,57,1140,lane-miles of city streets,5,175438.5965,200000000
+Small Business Services,7124,25442,job placements through Workforce1 Career Centers,28.00094332,1403.705783,35713082.54

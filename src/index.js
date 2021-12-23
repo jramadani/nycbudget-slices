@@ -97,33 +97,45 @@ function init() {
         d3.selectAll("#fisc3 svg").remove();
       }
       involveUpdate();
+      if (state.index == 26) {
+        d3.selectAll("#sani-cal svg").remove();
+        fiscyear(state.d21, "#sani-cal", "#EEC994");
+        calColorRange("#sani-cal rect", "1/11/2021", "1/17/2021");
+        d3.selectAll("#sani-cal svg").classed("prefade", false);
+      }
       switch (state.index) {
-        case 26:
-          d3.selectAll("#sani-cal svg").remove();
-          fiscyear(state.d21, "#sani-cal", "#DCA4B0");
-          calColorRange("#sani-cal rect", "1/1/2021", "1/7/2021");
-          d3.selectAll("#sani-cal svg").classed("prefade", false);
         case 28:
+          return tenmilcategories();
+        case 29:
+          return d3
+            .select("div .tenmillion")
+            .transition()
+            .duration(2000)
+            .style("width", "200px")
+            .style("height", "200px");
+        case 30:
           return hbc(state.hbcdata, "#fiveyrHBC");
       }
       if (state.index == 27 && response.direction == "down") {
         d3.selectAll("#sani-cal svg").remove();
       }
-
-      // if (state.index == 26) {
-      //   d3.selectAll("#sani-cal svg").remove();
-      //   fiscyear(state.d21, "#sani-cal", "#DCA4B0");
-      //   calColorRange("#sani-cal rect", "1/1/2021", "1/7/2021");
-      // }
-      // if (state.index == 27) {
-      //   hbc(state.hbcdata, "#fiveyrHBC");
-      // }
+      if (state.index == 28 && response.direction == "down") {
+        d3.select("div .tenmillion")
+          .transition()
+          .duration(2000)
+          .style("width", "5px")
+          .style("height", "5px");
+      }
+      hbcupdater("#fiveyrHBC");
     })
     .onStepExit((response) => {
       // { element, index, direction }
       //resets
-      d3.selectAll("#budget-totality .corepieces").attr("fill", "#EEC994");
-      d3.selectAll("#budget-totality text").remove();
+      d3.selectAll("#budget-totality .corepieces").style(
+        "background-color",
+        "#EEC994"
+      );
+      d3.selectAll("#budget-totality .corelabels").remove();
       d3.selectAll("#fisc2 rect").attr("fill", "#D69668");
       d3.selectAll("#fisc3 rect").attr("fill", "#D69668");
     });
@@ -200,43 +212,35 @@ function core() {
     { item: "Capital", descrip: "Description", x: 0, y: 300 },
     { item: "CapitalProgram", descrip: "Description", x: 100, y: 300 },
   ];
-  console.log(coredata);
-  let svg = d3
+
+  let core = d3
     .select("#budget-totality")
-    .append("svg")
-    .attr("width", width / 3.5)
-    .attr("height", height);
+    .append("div")
+    .attr("class", "cored")
+    .style("width", width / 3.5)
+    .style("height", height);
 
-  svg
-    .append("rect")
+  // this is the stem / 10 year capital program
+  core
+    .append("div")
     .attr("class", "tenyearcap")
-    .attr("width", 15)
-    .attr("height", 40)
-    .attr("fill", "#5C3C22")
-    .attr("transform", `translate(90, 0)`)
-    .on("mouseover", function () {
-      d3.select(this).attr("fill", "#B19E52");
-    })
-    .on("mouseout", function () {
-      d3.select(this).attr("fill", "#5C3C22");
-    });
+    .style("width", "15px")
+    .style("height", "40px")
+    .style("background-color", "#5C3C22")
+    .style("transform", `translate(90px,30px)`);
 
-  svg
+  // this is the rest of the pieces
+  core
     .selectAll(".pieces")
     .data(coredata)
-    .join("rect")
+    .join("div")
     .attr("class", (d) => d.item + " corepieces")
-    .attr("width", 100)
-    .attr("height", 150)
-    .attr("fill", "#EEC994")
-    .attr("stroke", "#EEC994")
-    .attr("transform", (d) => `translate(${d.x}, ${d.y + 30})`)
-    .on("mouseover", function () {
-      d3.select(this).attr("fill", "#AC8245");
-    })
-    .on("mouseout", function () {
-      d3.select(this).attr("fill", "#EEC994");
-    });
+    .style("width", "100px")
+    .style("height", "150px")
+    .style("position", "absolute")
+    .style("background-color", "#EEC994")
+    .style("border", "solid 2px #EEC994")
+    .style("transform", (d) => `translate(${d.x}px, ${d.y + 30}px)`);
 }
 
 function coreupdate() {
@@ -252,23 +256,26 @@ function coreupdate() {
     case 4:
       return updater(".CapitalProgram", 120, 360, "Capital Program");
     case 5:
-      return d3.select(".tenyearcap").attr("fill", "#B19E52");
+      return d3.select(".tenyearcap").style("background-color", "#B19E52");
     case 6:
-      return updater(".Revenue", 120, 60, "Revenue");
+      d3.select(".tenyearcap").style("background-color", "#5C3C22");
+      updater(".Revenue", 120, 60, "Revenue");
   }
+
   function updater(itemclass, x, y, text) {
     d3.selectAll(itemclass)
-      .attr("fill", "#AC8245")
+      .style("background-color", "#AC8245")
       .transition()
       .duration(2000)
       .ease(d3.easeLinear);
 
-    d3.selectAll("#budget-totality svg")
-      .append("text")
-      .attr("x", x)
-      .attr("y", y)
-      .text(text)
-      .attr("fill", "white");
+    d3.selectAll("#budget-totality " + itemclass)
+      .append("div")
+      .attr("class", "corelabels")
+      .html(`${text}`)
+      .style("color", "white")
+      .style("text-align", "center")
+      .style("padding", "10px");
   }
 }
 
@@ -651,26 +658,84 @@ function involvement() {
 }
 
 function tenmil() {
-  // first set up the single bar--there should be highlights for each?
-  // then set up the items--how many items equal the 10 mil?
-  // may need to outline this one
-
   const thisdiv = d3
     .select("#tenmil")
     .append("div")
     .style("width", "500px")
     .style("height", "500px")
-    .style("background-color", "#9ECE96");
+    .style("background-color", "#9ECE96")
+    .classed("backdrop", true);
 
   thisdiv
     .append("div")
+    .classed("tenmillion", true)
     .style("width", "5px")
     .style("height", "5px")
-    .style("background-color", "#EEC994")
-    .style("border", "1px dotted black");
+    .style("background-color", "#5C3C22");
+}
 
+function tenmilcategories() {
   // create bars for the categories
   // use the percentages to calculate width of total
+
+  d3.selectAll(".bar-outer").remove();
+  d3.selectAll(".bar-inner").remove();
+
+  const format = d3.format(",d");
+  const formatpercent = d3.format(".2");
+
+  d3.select("#tenmil").append("div").attr("id", "explanation-central");
+
+  const thisdiv = d3
+    .select("#sani-cal")
+    .append("div")
+    .classed("cat-container", true)
+    .style("position", "relative")
+    .style("margin-left", "-200px");
+
+  thisdiv
+    .selectAll(".bar-outer")
+    .data(state.tenmil)
+    .join("div")
+    .style("width", "250px")
+    .style("height", "30px")
+    .style("background-color", "#EEC994")
+    .style("position", "absolute")
+    .style("top", (d, i) => `${i * 40}px`)
+    .style("left", "0px")
+    .on("mouseover", function () {
+      d3.select("#explanation-central").html(
+        `<p><b>${
+          this.__data__.division
+        }:</b><br> $10 million pays for <span class="highlighted">${format(
+          this.__data__.part
+        )} of ${format(this.__data__.total)} ${
+          this.__data__.unit
+        }</span>, which is ${formatpercent(
+          this.__data__.percent
+        )}% of what's needed for the year.</p>`
+      );
+    });
+
+  thisdiv
+    .selectAll("div .bar-outer")
+    .data(state.tenmil)
+    .join("div")
+    .style("width", (d) => `${(d.percent * 250) / 100}px`)
+    .style("height", "30px")
+    .style("background-color", "#6E9D68")
+    .style("position", "absolute")
+    .style("z-index", 99999)
+    .style("top", (d, i) => `${i * 40}px`)
+    .style("left", "0px");
+
+  const overalltotal = d3.sum(state.tenmil.map((d) => d.totalprice));
+
+  console.log(
+    "this is how much you have left",
+    state.hbcdata[4].Adopted - overalltotal
+  );
+  console.log("how many squares", overalltotal / 10000000);
 }
 
 //step update functions
@@ -809,20 +874,12 @@ function hbc(data, placement) {
     .selectAll("rect")
     .data(data)
     .join("rect")
+    .attr("class", (d, i) => "bar" + i)
     .attr("x", x(0))
     .attr("y", (d, i) => y(i))
     .attr("width", 0)
     .attr("height", y.bandwidth())
     .attr("fill", "#9ECE96");
-
-  // might be able to use this part to figure out the transition?
-  // or might need to use a draw function
-  svg
-    .selectAll(placement + " rect")
-    .transition()
-    .duration(5000)
-    .attr("width", (d) => x(d.Adopted) - x(0))
-    .delay((d, i) => i * 500);
 
   const text = svg
     .selectAll("text")
@@ -859,6 +916,38 @@ function hbc(data, placement) {
   d3.selectAll("path.domain").remove();
 }
 
+//hbc needs its own updater function
+function hbcupdater(placement) {
+  // necessary items from the original function
+  const x = d3
+    .scaleLinear()
+    .domain([0, d3.max(state.hbcdata, (d) => d.Adopted)])
+    .range([margin.left, width - margin.right]);
+
+  //switch case for each year of the bar
+
+  switch (state.index) {
+    case 31:
+      return hbcreuse(".bar0");
+    case 32:
+      return hbcreuse(".bar1");
+    case 33:
+      return hbcreuse(".bar2");
+    case 34:
+      return hbcreuse(".bar3");
+    case 35:
+      return hbcreuse(".bar4");
+  }
+
+  function hbcreuse(placer) {
+    d3.selectAll(placement + " " + placer)
+      .transition()
+      .duration(3000)
+      .attr("width", (d) => x(d.Adopted) - x(0));
+    // .delay((d, i) => i * 500);
+  }
+}
+
 function heattable(placement, columns, data) {
   //create table
   //conditional formatting by value
@@ -887,7 +976,6 @@ function heattable(placement, columns, data) {
       const vals = Object.values(d);
       const item = vals.pop();
       vals.unshift(item);
-      console.log(vals);
       return vals;
     })
     .join("td")
@@ -1056,7 +1144,6 @@ function geomap() {
   //set up range slider
 
   const selectYear = d3.select("#range").on("change", function () {
-    console.log("new selected year is", this.value);
     d3.select("#selected-year").html(`${this.value}`);
     state.selectedyear = this.value;
 
@@ -1146,7 +1233,6 @@ function geomap() {
       d3.select(this).attr("stroke", "white").attr("stroke-width", "1px");
     })
     .on("click", function () {
-      console.log(this.__data__.properties.BoroCD);
       //filter the data here, pass it through to the function
       const cbarea = state.cbdata.filter(
         (d) => d.CBnum == this.__data__.properties.BoroCD
@@ -1169,7 +1255,6 @@ function draw() {
     if (state.selectedcd && state.selectedyear) {
       const matchup = state.cbdata.filter((d) => state.selectedcd == d.CBnum);
       state.activeCD = matchup.filter((d) => state.selectedyear == d.Year);
-      console.log("active district", state.activeCD);
     }
     const numbersformat = d3.format(",d");
     const amount = numbersformat(d3.sum(state.activeCD.map((d) => d.Adopted)));
