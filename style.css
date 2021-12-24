@@ -265,7 +265,7 @@ select {
 #comparison-treemaps {
   display: grid;
   grid-template-columns: 50% 50%;
-  grid-template-rows: 15% 85%;
+  grid-template-rows: 15% 15 70%;
   place-items: center;
 }
 
@@ -417,7 +417,7 @@ select {
 }
 
 hr {
-  margin: 50px 500px 50px 500px;
+  margin: 100px 500px 100px 500px;
 }
 
 /* the below is for debugging purposes */
