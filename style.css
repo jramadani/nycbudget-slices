@@ -107,6 +107,18 @@ button {
 
 /*table styling section*/
 
+#heatmaps {
+  height: 700px;
+  position: sticky;
+  top: 0;
+  margin-top: 20px;
+}
+
+table {
+  font-size: 20px;
+  margin-bottom: 50px;
+}
+
 td {
   padding: 5px 10px 5px 10px;
   text-align: right;
@@ -317,6 +329,10 @@ select {
   position: relative;
 }
 
+#compare-treemaps-detail {
+  text-align: center;
+}
+
 #summs,
 #tmc1-details,
 #tmc2-details,
@@ -398,6 +414,10 @@ select {
     visibility: visible;
     opacity: 1;
   }
+}
+
+hr {
+  margin: 50px 500px 50px 500px;
 }
 
 /* the below is for debugging purposes */

@@ -20,6 +20,8 @@ let state = {
   commboardtotals: [],
   commsmod: [],
   index: null,
+  drop1: null,
+  drop2: null,
 };
 
 //load in the data and call the init function
@@ -90,19 +92,33 @@ function init() {
       state.index = response.index;
       //calling the update functions
       coreupdate();
+      // if you're scrolling back up you shouldn't get duplicates of the core labels
+      if (response.direction == "up") {
+        d3.selectAll("#budget-totality .corepieces").style(
+          "background-color",
+          "#EEC994"
+        );
+        d3.selectAll("#budget-totality .corelabels").remove();
+      }
+      // the calendar update function
       calupdate();
+      //remove the fiscal year calendar svgs if you scroll back up
       if (state.index == 7 && response.direction == "up") {
         d3.selectAll("#fisc1 svg").attr("opacity", 1);
         d3.selectAll("#fisc2 svg").remove();
         d3.selectAll("#fisc3 svg").remove();
       }
+      //call the update function for involvement
       involveUpdate();
+      //remove the sanitation calendar if it already exists, then call it, and remove the category bars if existing
       if (state.index == 26) {
         d3.selectAll("#sani-cal svg").remove();
         fiscyear(state.d21, "#sani-cal", "#EEC994");
         calColorRange("#sani-cal rect", "1/11/2021", "1/17/2021");
         d3.selectAll("#sani-cal svg").classed("prefade", false);
+        d3.selectAll("div .cat-container").remove();
       }
+      //small switch case for legibility--call the categories; transition the square; call the axes for the bar chart
       switch (state.index) {
         case 28:
           return tenmilcategories();
@@ -113,12 +129,14 @@ function init() {
             .duration(2000)
             .style("width", "200px")
             .style("height", "200px");
-        case 30:
+        case 31:
           return hbc(state.hbcdata, "#fiveyrHBC");
       }
+      //removing the sanitation calendar to make room for the bars
       if (state.index == 27 && response.direction == "down") {
         d3.selectAll("#sani-cal svg").remove();
       }
+      // reset the $10 million square to its $10 million status
       if (state.index == 28 && response.direction == "down") {
         d3.select("div .tenmillion")
           .transition()
@@ -126,22 +144,43 @@ function init() {
           .style("width", "5px")
           .style("height", "5px");
       }
+      //update the horizontal bar chart bar by bar
       hbcupdater("#fiveyrHBC");
+      //removing the categories & explanation so they don't overflow
+      if (state.index == 30) {
+        d3.selectAll("div .cat-container").remove();
+        d3.selectAll("#explanation-central p").remove();
+      }
+      //call the heatmap table for the community boards
+      if (state.index == 37) {
+        heattable(
+          "#heatmap2",
+          ["Community Board Borough", "2017", "2018", "2019", "2020", "2021"],
+          state.commboardtotals
+        );
+        d3.selectAll("#heatmap2 table").classed("prefade", false);
+      }
     })
     .onStepExit((response) => {
       // { element, index, direction }
       //resets
-      d3.selectAll("#budget-totality .corepieces").style(
-        "background-color",
-        "#EEC994"
-      );
-      d3.selectAll("#budget-totality .corelabels").remove();
-      d3.selectAll("#fisc2 rect").attr("fill", "#D69668");
-      d3.selectAll("#fisc3 rect").attr("fill", "#D69668");
+
+      //this resets the core - without it, we keep the pieces on it
+      // d3.selectAll("#budget-totality .corepieces").style(
+      //   "background-color",
+      //   "#EEC994"
+      // );
+      // d3.selectAll("#budget-totality .corelabels").remove();
+      //this resets the calendars' fill so that we can highlight a different date
+      d3.selectAll("#fisc2 rect").attr("fill", "#EEC994");
+      d3.selectAll("#fisc3 rect").attr("fill", "#EEC994");
+      //this removes the explanation when you leave that particular section
+      if (response.index == 28 && response.direction == "down") {
+        d3.selectAll("#explanation-central p").remove();
+      }
     });
 
-  //initialize treemap data here:
-  //testing treemap data
+  //setting up the static treemap data since we're calling it in the init
   const tdata1 = d3
     .hierarchy(
       d3
@@ -151,7 +190,7 @@ function init() {
           (d) => d.Agency,
           (d) => d["Expense Category"]
         )
-        .get("Manhattan Community Board # 6")
+        .get("Manhattan Community Board # 12")
     )
     .copy()
     .sum((d) => d.Modified);
@@ -168,11 +207,6 @@ function init() {
     "#heatmap",
     ["Budget Agency", "2017", "2018", "2019", "2020", "2021"],
     state.toptenmod
-  );
-  heattable(
-    "#heatmap2",
-    ["Community Board Borough", "2017", "2018", "2019", "2020", "2021"],
-    state.commboardtotals
   );
   geomap();
   jitterplot();
@@ -202,15 +236,14 @@ function core() {
   const coredata = [
     {
       item: "Expense",
-      descrip: "What people usually think of when they think about the budget.",
       x: 0,
       y: 0,
     },
-    { item: "Revenue", descrip: "Revenue description", x: 100, y: 0 },
-    { item: "Contract", descrip: "Description", x: 0, y: 150 },
-    { item: "FinancialPlan", descrip: "Description", x: 100, y: 150 },
-    { item: "Capital", descrip: "Description", x: 0, y: 300 },
-    { item: "CapitalProgram", descrip: "Description", x: 100, y: 300 },
+    { item: "Revenue", x: 100, y: 0 },
+    { item: "Contract", x: 0, y: 150 },
+    { item: "FinancialPlan", x: 100, y: 150 },
+    { item: "Capital", x: 0, y: 300 },
+    { item: "CapitalProgram", x: 100, y: 300 },
   ];
 
   let core = d3
@@ -308,7 +341,7 @@ function fiscyear(caldata, placement, color) {
     }H${n * cellSize}`;
   }
 
-  //
+  //function above is messing up the structure in VSCode but the code still works?
 
   let years = d3.groups(caldata, (d) => new Date(d.date).getUTCFullYear());
 
@@ -678,8 +711,7 @@ function tenmilcategories() {
   // create bars for the categories
   // use the percentages to calculate width of total
 
-  d3.selectAll(".bar-outer").remove();
-  d3.selectAll(".bar-inner").remove();
+  d3.selectAll("div .cat-container").remove();
 
   const format = d3.format(",d");
   const formatpercent = d3.format(".2");
@@ -744,8 +776,8 @@ function calupdate() {
   //initial if statement calls multiple items so isn't in the switch-case
   if (state.index == 8) {
     d3.selectAll("#fisc1 svg").attr("opacity", "0.3");
-    fiscyear(state.dhalf1, "#fisc2", "#D69668");
-    fiscyear(state.dhalf2, "#fisc3", "#D69668");
+    fiscyear(state.dhalf1, "#fisc2", "#EEC994");
+    fiscyear(state.dhalf2, "#fisc3", "#EEC994");
     d3.selectAll("#fisc2 svg").classed("prefade", false);
     d3.selectAll("#fisc3 svg").classed("prefade", false);
   }
@@ -927,15 +959,15 @@ function hbcupdater(placement) {
   //switch case for each year of the bar
 
   switch (state.index) {
-    case 31:
-      return hbcreuse(".bar0");
     case 32:
-      return hbcreuse(".bar1");
+      return hbcreuse(".bar0");
     case 33:
-      return hbcreuse(".bar2");
+      return hbcreuse(".bar1");
     case 34:
-      return hbcreuse(".bar3");
+      return hbcreuse(".bar2");
     case 35:
+      return hbcreuse(".bar3");
+    case 36:
       return hbcreuse(".bar4");
   }
 
@@ -949,6 +981,10 @@ function hbcupdater(placement) {
 }
 
 function heattable(placement, columns, data) {
+  //remove table
+
+  d3.selectAll("#heatmap2 table").remove();
+
   //create table
   //conditional formatting by value
 
@@ -983,6 +1019,10 @@ function heattable(placement, columns, data) {
     .style("background-color", (d) =>
       typeof d != "string" ? color(d) : "none"
     );
+
+  if (placement == "#heatmap2") {
+    d3.selectAll("#heatmap2 table").classed("fadein", true);
+  }
 }
 
 function comparative(dropdown, location, details, data, default_selection) {
@@ -995,12 +1035,16 @@ function comparative(dropdown, location, details, data, default_selection) {
     //remove existing treemap
     d3.select(location + " .treemapped").remove();
     const newdata = this.value;
+    if (dropdown == "#tmc-1-select") {
+      state.drop1 = this.value;
+    } else if (dropdown == "#tmc-2-select") {
+      state.drop2 = this.value;
+    }
     rolleddata = d3
       .hierarchy(
         d3
           .group(
             data.filter((d) => d.Year == 2021 && d.Modified != 0),
-            //you can make the bottom one a variable that matches with a dropdown to switch the data i am a GENIUS
             (d) => d.Agency,
             (d) => d["Expense Category"]
           )
@@ -1009,6 +1053,7 @@ function comparative(dropdown, location, details, data, default_selection) {
       .copy()
       .sum((d) => d.Modified);
     treemap(rolleddata, location, details, location);
+    comparecb();
   });
 
   // add in dropdown options from the unique values in the data
@@ -1042,6 +1087,15 @@ function treemap(wrappeddata, element, item, reusable) {
   //this needs to be a reusable component--make sure parts are easily substituted
   // to get the item to redraw
 
+  //color function from https://24ways.org/2010/calculating-color-contrast
+  function getContrastYIQ(hexcolor) {
+    var r = parseInt(hexcolor.substr(0, 2), 16);
+    var g = parseInt(hexcolor.substr(2, 2), 16);
+    var b = parseInt(hexcolor.substr(4, 2), 16);
+    var yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 128 ? "black" : "white";
+  }
+
   const localwidth = window.innerWidth;
   if (reusable) {
     d3.selectAll(`${reusable} .treemapped`).remove();
@@ -1049,7 +1103,7 @@ function treemap(wrappeddata, element, item, reusable) {
   //wrappeddata is the data in its final state, pulled into this function
   //the data should be hierarchical
 
-  let logScale = d3.scaleLog().domain([153, 229152]).range([-0.5, 1.5]);
+  let logScale = d3.scaleLog().domain([153, 229152]).range([-1, 1.5]);
 
   let scale = d3
     .scaleLinear()
@@ -1117,18 +1171,17 @@ function treemap(wrappeddata, element, item, reusable) {
 
   leaf
     .append("span")
-    .html(
-      (d) =>
-        `${d.data["Expense Category"]} <br> ${format(
-          Number(Math.round(d.value + "e2") + "e-2")
-        )}`
+    .html((d) =>
+      (d.x1 - d.x0) * (d.y1 - d.y0) > 5000
+        ? `${d.data["Expense Category"]} <br> $${format(
+            Number(Math.round(d.value + "e2") + "e-2")
+          )}`
+        : " "
     )
     .style("font-size", (d) => `${logScale((d.x1 - d.x0) * (d.y1 - d.y0))}em`)
     .style("font-family", "Asap")
-    .style(
-      "color",
-      "white"
-      // (d) => (isDark(color(d.value)) ? "white" : "black")
+    .style("color", (d) =>
+      getContrastYIQ(d3.color(color(d.value)).formatHex().substr(1, 6))
     )
     .style("position", "absolute")
     .style("top", (d) => `${d.y0}px`)
@@ -1154,7 +1207,7 @@ function geomap() {
 
     rolledup = d3.rollups(
       data,
-      (v) => d3.sum(v, (x) => x.Adopted),
+      (v) => d3.sum(v, (x) => x.Modified),
       (d) => d.CBnum
     );
 
@@ -1179,7 +1232,7 @@ function geomap() {
 
   let rolledup = d3.rollups(
     data,
-    (v) => d3.sum(v, (x) => x.Adopted),
+    (v) => d3.sum(v, (x) => x.Modified),
     (d) => d.CBnum
   );
 
@@ -1257,7 +1310,7 @@ function draw() {
       state.activeCD = matchup.filter((d) => state.selectedyear == d.Year);
     }
     const numbersformat = d3.format(",d");
-    const amount = numbersformat(d3.sum(state.activeCD.map((d) => d.Adopted)));
+    const amount = numbersformat(d3.sum(state.activeCD.map((d) => d.Modified)));
 
     if (state.activeCD[0] != undefined) {
       const selectedDistrict = state.activeCD[0]["Agency"];
@@ -1439,4 +1492,45 @@ function jitterplot() {
     .style("text-anchor", "middle")
     .text("Modified Budget Allocation ($)")
     .attr("fill", "#5C3C22");
+}
+
+function comparecb() {
+  // this function takes the dropdowns and creates a comparative line
+
+  //at this point we have the dropdown values state.drop1 and state.drop2
+  //the point of this is to compare the first and second selections' expense category totals
+  //and say which has more than the other
+  let format = d3.format(",d");
+  const data1 = state.cbdata.filter(
+    (d) => d.Year == 2021 && d.Modified != 0 && d.Agency == state.drop1
+  );
+  const data2 = state.cbdata.filter(
+    (d) => d.Year == 2021 && d.Modified != 0 && d.Agency == state.drop2
+  );
+  const first = d3.sum(data1.map((d) => d.Modified));
+  const second = d3.sum(data2.map((d) => d.Modified));
+
+  if (state.drop1 && state.drop2) {
+    d3.select("#tmc1-total").html(
+      `<span style="font-size:28px;">$${format(first)}</span>`
+    );
+    d3.select("#tmc2-total").html(
+      `<span style="font-size:28px;">$${format(second)}</span>`
+    );
+    if (first > second) {
+      const difference = first - second;
+      d3.select("#compare-treemaps-detail").html(
+        `<p>For 2021, ${state.drop1} has <span class="highlighted">$${format(
+          difference
+        )} more</span> than ${state.drop2}</p>`
+      );
+    } else if (second > first) {
+      const difference = second - first;
+      d3.select("#compare-treemaps-detail").html(
+        `<p>For 2021, ${state.drop1} has <span class="highlighted">$${format(
+          difference
+        )} less</span> than ${state.drop2}</p>`
+      );
+    }
+  }
 }
