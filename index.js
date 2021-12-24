@@ -737,7 +737,7 @@ function tenmilcategories() {
     .style("left", "0px")
     .on("mouseover", function () {
       d3.select("#explanation-central").html(
-        `<p><b>${
+        `<p style="padding:40px"><b>${
           this.__data__.division
         }:</b><br> $10 million pays for <span class="highlighted">${format(
           this.__data__.part
