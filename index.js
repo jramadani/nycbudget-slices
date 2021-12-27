@@ -91,7 +91,7 @@ function init() {
       console.log(response.index);
       state.index = response.index;
       //calling the update functions
-      coreupdate();
+      coreUpdate();
       // if you're scrolling back up you shouldn't get duplicates of the core labels
       if (response.direction == "up") {
         d3.selectAll("#budget-totality .corepieces").style(
@@ -101,7 +101,7 @@ function init() {
         d3.selectAll("#budget-totality .corelabels").remove();
       }
       // the calendar update function
-      calupdate();
+      calUpdate();
       //remove the fiscal year calendar svgs if you scroll back up
       if (state.index == 7 && response.direction == "up") {
         d3.selectAll("#fisc1 svg").attr("opacity", 1);
@@ -113,7 +113,7 @@ function init() {
       //remove the sanitation calendar if it already exists, then call it, and remove the category bars if existing
       if (state.index == 26) {
         d3.selectAll("#sani-cal svg").remove();
-        fiscyear(state.d21, "#sani-cal", "#EEC994");
+        fiscYear(state.d21, "#sani-cal", "#EEC994");
         calColorRange("#sani-cal rect", "1/11/2021", "1/17/2021");
         d3.selectAll("#sani-cal svg").classed("prefade", false);
         d3.selectAll("div .cat-container").remove();
@@ -121,7 +121,7 @@ function init() {
       //small switch case for legibility--call the categories; transition the square; call the axes for the bar chart
       switch (state.index) {
         case 28:
-          return tenmilcategories();
+          return tenMilCategories();
         case 29:
           return d3
             .select("div .tenmillion")
@@ -145,7 +145,7 @@ function init() {
           .style("height", "5px");
       }
       //update the horizontal bar chart bar by bar
-      hbcupdater("#fiveyrHBC");
+      hbcUpdater("#fiveyrHBC");
       //removing the categories & explanation so they don't overflow
       if (state.index == 30) {
         d3.selectAll("div .cat-container").remove();
@@ -153,7 +153,7 @@ function init() {
       }
       //call the heatmap table for the community boards
       if (state.index == 37) {
-        heattable(
+        heatTable(
           "#heatmap2",
           ["Community Board Borough", "2017", "2018", "2019", "2020", "2021"],
           state.commboardtotals
@@ -197,13 +197,13 @@ function init() {
 
   //part one initial function calls
   core();
-  fiscyear(state.d21, "#fisc1", "#DCA4B0");
+  fiscYear(state.d21, "#fisc1", "#DCA4B0");
   involvement();
-  tenmil();
+  tenMil();
 
   // part two initial function calls
 
-  heattable(
+  heatTable(
     "#heatmap",
     ["Budget Agency", "2017", "2018", "2019", "2020", "2021"],
     state.toptenmod
@@ -276,26 +276,26 @@ function core() {
     .style("transform", (d) => `translate(${d.x}px, ${d.y + 30}px)`);
 }
 
-function coreupdate() {
+function coreUpdate() {
   switch (state.index) {
     case 0:
-      return updater(".Expense", 20, 60, "Expense");
+      return updater(".Expense", "Expense");
     case 1:
-      return updater(".Capital", 20, 360, "Capital");
+      return updater(".Capital", "Capital");
     case 2:
-      return updater(".Contract", 20, 210, "Contract");
+      return updater(".Contract", "Contract");
     case 3:
-      return updater(".FinancialPlan", 120, 210, "Financial Plan");
+      return updater(".FinancialPlan", "Financial Plan");
     case 4:
-      return updater(".CapitalProgram", 120, 360, "Capital Program");
+      return updater(".CapitalProgram", "Capital Program");
     case 5:
       return d3.select(".tenyearcap").style("background-color", "#B19E52");
     case 6:
       d3.select(".tenyearcap").style("background-color", "#5C3C22");
-      updater(".Revenue", 120, 60, "Revenue");
+      updater(".Revenue", "Revenue");
   }
 
-  function updater(itemclass, x, y, text) {
+  function updater(itemclass, text) {
     d3.selectAll(itemclass)
       .style("background-color", "#AC8245")
       .transition()
@@ -312,7 +312,7 @@ function coreupdate() {
   }
 }
 
-function fiscyear(caldata, placement, color) {
+function fiscYear(caldata, placement, color) {
   // calendar base from Mike Bostock, adapted for vertical use
   if (placement == "#fisc2" || placement == "#fisc3") {
     d3.selectAll(placement + " svg").remove();
@@ -690,7 +690,7 @@ function involvement() {
   }
 }
 
-function tenmil() {
+function tenMil() {
   const thisdiv = d3
     .select("#tenmil")
     .append("div")
@@ -707,7 +707,7 @@ function tenmil() {
     .style("background-color", "#5C3C22");
 }
 
-function tenmilcategories() {
+function tenMilCategories() {
   // create bars for the categories
   // use the percentages to calculate width of total
 
@@ -772,12 +772,12 @@ function tenmilcategories() {
 
 //step update functions
 
-function calupdate() {
+function calUpdate() {
   //initial if statement calls multiple items so isn't in the switch-case
   if (state.index == 8) {
     d3.selectAll("#fisc1 svg").attr("opacity", "0.3");
-    fiscyear(state.dhalf1, "#fisc2", "#EEC994");
-    fiscyear(state.dhalf2, "#fisc3", "#EEC994");
+    fiscYear(state.dhalf1, "#fisc2", "#EEC994");
+    fiscYear(state.dhalf2, "#fisc3", "#EEC994");
     d3.selectAll("#fisc2 svg").classed("prefade", false);
     d3.selectAll("#fisc3 svg").classed("prefade", false);
   }
@@ -785,31 +785,31 @@ function calupdate() {
 
   switch (state.index) {
     case 9:
-      return calcolorupdate("#fisc2 rect", "7/1/2021");
+      return calColorUpdate("#fisc2 rect", "7/1/2021");
     case 10:
-      return calcolorupdate("#fisc2 rect", "9/3/2021");
+      return calColorUpdate("#fisc2 rect", "9/3/2021");
     case 11:
-      return calcolorupdate("#fisc2 rect", "10/31/2021");
+      return calColorUpdate("#fisc2 rect", "10/31/2021");
     case 12:
-      return calcolorupdate("#fisc2 rect", "12/31/2021");
+      return calColorUpdate("#fisc2 rect", "12/31/2021");
     case 13:
-      return calcolorupdate("#fisc3 rect", "1/16/2022");
+      return calColorUpdate("#fisc3 rect", "1/16/2022");
     case 14:
       return calColorRange("#fisc3 rect", "01/16/2022", "02/16/2022");
     case 15:
-      return calcolorupdate("#fisc3 rect", "2/25/2022");
+      return calColorUpdate("#fisc3 rect", "2/25/2022");
     case 16:
-      return calcolorupdate("#fisc3 rect", "3/10/2022");
+      return calColorUpdate("#fisc3 rect", "3/10/2022");
     case 17:
-      return calcolorupdate("#fisc3 rect", "3/25/2022");
+      return calColorUpdate("#fisc3 rect", "3/25/2022");
     case 18:
-      return calcolorupdate("#fisc3 rect", "4/26/2022");
+      return calColorUpdate("#fisc3 rect", "4/26/2022");
     case 19:
       return calColorRange("#fisc3 rect", "5/6/2022", "5/25/2022");
     case 20:
-      return calcolorupdate("#fisc3 rect", "6/5/2022");
+      return calColorUpdate("#fisc3 rect", "6/5/2022");
     case 21:
-      return calcolorupdate("#fisc3 rect", "6/30/2022");
+      return calColorUpdate("#fisc3 rect", "6/30/2022");
   }
 }
 
@@ -817,7 +817,7 @@ function calupdate() {
 //compare the dates to the given date, and then change the fill color
 //the first function is for singular dates, the second is for ranges
 
-function calcolorupdate(selecting, datecompare) {
+function calColorUpdate(selecting, datecompare) {
   d3.selectAll(selecting)
     .filter(
       (d) => new Date(d.date).getTime() == new Date(datecompare).getTime()
@@ -949,7 +949,7 @@ function hbc(data, placement) {
 }
 
 //hbc needs its own updater function
-function hbcupdater(placement) {
+function hbcUpdater(placement) {
   // necessary items from the original function
   const x = d3
     .scaleLinear()
@@ -960,18 +960,18 @@ function hbcupdater(placement) {
 
   switch (state.index) {
     case 32:
-      return hbcreuse(".bar0");
+      return hbcReuse(".bar0");
     case 33:
-      return hbcreuse(".bar1");
+      return hbcReuse(".bar1");
     case 34:
-      return hbcreuse(".bar2");
+      return hbcReuse(".bar2");
     case 35:
-      return hbcreuse(".bar3");
+      return hbcReuse(".bar3");
     case 36:
-      return hbcreuse(".bar4");
+      return hbcReuse(".bar4");
   }
 
-  function hbcreuse(placer) {
+  function hbcReuse(placer) {
     d3.selectAll(placement + " " + placer)
       .transition()
       .duration(3000)
@@ -980,7 +980,7 @@ function hbcupdater(placement) {
   }
 }
 
-function heattable(placement, columns, data) {
+function heatTable(placement, columns, data) {
   //remove table
 
   d3.selectAll("#heatmap2 table").remove();
@@ -1053,7 +1053,7 @@ function comparative(dropdown, location, details, data, default_selection) {
       .copy()
       .sum((d) => d.Modified);
     treemap(rolleddata, location, details, location);
-    comparecb();
+    compareCB();
   });
 
   // add in dropdown options from the unique values in the data
@@ -1299,7 +1299,7 @@ function geomap() {
         )
         .map(([y, v]) => ({ Year: y, Modified: v }));
 
-      supplementaltrend(summarized);
+      supplementalTrend(summarized);
     });
 }
 function draw() {
@@ -1326,7 +1326,7 @@ function draw() {
   }
 }
 
-function supplementaltrend(data) {
+function supplementalTrend(data) {
   // for an area graph per community board
   d3.selectAll("#cbarea").remove();
 
@@ -1494,7 +1494,7 @@ function jitterplot() {
     .attr("fill", "#5C3C22");
 }
 
-function comparecb() {
+function compareCB() {
   // this function takes the dropdowns and creates a comparative line
 
   //at this point we have the dropdown values state.drop1 and state.drop2
