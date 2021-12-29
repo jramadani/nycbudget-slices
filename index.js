@@ -114,7 +114,12 @@ function init() {
       if (state.index == 26) {
         d3.selectAll("#sani-cal svg").remove();
         fiscYear(state.d21, "#sani-cal", "#EEC994");
-        calColorRange("#sani-cal rect", "1/11/2021", "1/17/2021");
+        calColorRange(
+          "#sani-cal rect",
+          "#sanicalstep",
+          "1/11/2021",
+          "1/17/2021"
+        );
         d3.selectAll("#sani-cal svg").classed("prefade", false);
         d3.selectAll("div .cat-container").remove();
       }
@@ -239,11 +244,11 @@ function core() {
       x: 0,
       y: 0,
     },
-    { item: "Revenue", x: 100, y: 0 },
+    { item: "Capital", x: 100, y: 0 },
     { item: "Contract", x: 0, y: 150 },
     { item: "FinancialPlan", x: 100, y: 150 },
-    { item: "Capital", x: 0, y: 300 },
-    { item: "CapitalProgram", x: 100, y: 300 },
+    { item: "CapitalProgram", x: 0, y: 300 },
+    { item: "Revenue", x: 100, y: 300 },
   ];
 
   let core = d3
@@ -643,11 +648,13 @@ function involvement() {
     .attr("fill", (d) => d.color)
     .attr("class", (d) => d.phase)
     .style("visibility", "hidden")
+    .style("cursor", "pointer")
     .on("mouseover", function () {
       d3.select("#entityid").html(`${this.__data__.name}`);
       d3.select(this).attr("stroke", "#180D05").attr("stroke-width", "5px");
     })
     .on("mouseout", function () {
+      d3.select("#entityid").html(``);
       d3.select(this).attr("stroke", "none");
     });
 
@@ -723,17 +730,19 @@ function tenMilCategories() {
     .append("div")
     .classed("cat-container", true)
     .style("position", "relative")
-    .style("margin-left", "-200px");
+    .style("margin-left", "-250px");
 
   thisdiv
     .selectAll(".bar-outer")
     .data(state.tenmil)
     .join("div")
-    .style("width", "250px")
-    .style("height", "30px")
+    .style("width", "200px")
+    .style("height", "25px")
     .style("background-color", "#EEC994")
     .style("position", "absolute")
     .style("top", (d, i) => `${i * 40}px`)
+    .style("cursor", "pointer")
+    .html((d) => `<span class="catbars">${d.division}</span>`)
     .style("left", "0px")
     .on("mouseover", function () {
       d3.select("#explanation-central").html(
@@ -753,8 +762,8 @@ function tenMilCategories() {
     .selectAll("div .bar-outer")
     .data(state.tenmil)
     .join("div")
-    .style("width", (d) => `${(d.percent * 250) / 100}px`)
-    .style("height", "30px")
+    .style("width", (d) => `${(d.percent * 200) / 100}px`)
+    .style("height", "25px")
     .style("background-color", "#6E9D68")
     .style("position", "absolute")
     .style("z-index", 99999)
@@ -785,31 +794,41 @@ function calUpdate() {
 
   switch (state.index) {
     case 9:
-      return calColorUpdate("#fisc2 rect", "7/1/2021");
+      return calColorUpdate("#fisc2 rect", "#calstep1", "7/1/2021");
     case 10:
-      return calColorUpdate("#fisc2 rect", "9/3/2021");
+      return calColorUpdate("#fisc2 rect", "#calstep2", "9/3/2021");
     case 11:
-      return calColorUpdate("#fisc2 rect", "10/31/2021");
+      return calColorUpdate("#fisc2 rect", "#calstep3", "10/31/2021");
     case 12:
-      return calColorUpdate("#fisc2 rect", "12/31/2021");
+      return calColorUpdate("#fisc2 rect", "#calstep4", "12/31/2021");
     case 13:
-      return calColorUpdate("#fisc3 rect", "1/16/2022");
+      return calColorUpdate("#fisc3 rect", "#calstep5", "1/16/2022");
     case 14:
-      return calColorRange("#fisc3 rect", "01/16/2022", "02/16/2022");
+      return calColorRange(
+        "#fisc3 rect",
+        "#calstep6",
+        "01/16/2022",
+        "02/16/2022"
+      );
     case 15:
-      return calColorUpdate("#fisc3 rect", "2/25/2022");
+      return calColorUpdate("#fisc3 rect", "#calstep7", "2/25/2022");
     case 16:
-      return calColorUpdate("#fisc3 rect", "3/10/2022");
+      return calColorUpdate("#fisc3 rect", "#calstep8", "3/10/2022");
     case 17:
-      return calColorUpdate("#fisc3 rect", "3/25/2022");
+      return calColorUpdate("#fisc3 rect", "#calstep9", "3/25/2022");
     case 18:
-      return calColorUpdate("#fisc3 rect", "4/26/2022");
+      return calColorUpdate("#fisc3 rect", "#calstep10", "4/26/2022");
     case 19:
-      return calColorRange("#fisc3 rect", "5/6/2022", "5/25/2022");
+      return calColorRange(
+        "#fisc3 rect",
+        "#calstep11",
+        "5/6/2022",
+        "5/25/2022"
+      );
     case 20:
-      return calColorUpdate("#fisc3 rect", "6/5/2022");
+      return calColorUpdate("#fisc3 rect", "#calstep12", "6/5/2022");
     case 21:
-      return calColorUpdate("#fisc3 rect", "6/30/2022");
+      return calColorUpdate("#fisc3 rect", "#calstep13", "6/30/2022");
   }
 }
 
@@ -817,15 +836,17 @@ function calUpdate() {
 //compare the dates to the given date, and then change the fill color
 //the first function is for singular dates, the second is for ranges
 
-function calColorUpdate(selecting, datecompare) {
+function calColorUpdate(selecting, highlight, datecompare) {
   d3.selectAll(selecting)
     .filter(
       (d) => new Date(d.date).getTime() == new Date(datecompare).getTime()
     )
     .attr("fill", "#9ECE96");
+
+  d3.selectAll(highlight).attr("class", "highlightedcal");
 }
 
-function calColorRange(selecting, first, last) {
+function calColorRange(selecting, highlight, first, last) {
   //create array of dates
   const start = new Date(first);
   const end = new Date(last);
@@ -837,10 +858,10 @@ function calColorRange(selecting, first, last) {
     dt.setDate(dt.getDate() + 1);
   }
   //then:
-  return d3
-    .selectAll(selecting)
+  d3.selectAll(selecting)
     .filter((d) => thismonth.includes(new Date(d.date).getTime()))
     .attr("fill", "#9ECE96");
+  d3.selectAll(highlight).attr("class", "highlightedcal");
 }
 
 function involveUpdate() {
@@ -1155,15 +1176,13 @@ function treemap(wrappeddata, element, item, reusable) {
         )}`
         )
         .style("visibility", "visible")
-        .style(
-          "transform",
-          `translate(${
-            this.__data__.x0 + (this.__data__.x1 - this.__data__.x0) / 2
-          }px, ${
-            this.__data__.y0 + (this.__data__.y1 - this.__data__.y0) / 2
-          }px)`
-        )
         .style("padding", "20px");
+    })
+    .on("mousemove", (d) => {
+      d3.select(item).style(
+        "transform",
+        `translate(${d.x / 5}px, ${d.y / 2}px)`
+      );
     })
     .on("mouseout", function () {
       d3.select(item).style("visibility", "hidden");
@@ -1186,7 +1205,29 @@ function treemap(wrappeddata, element, item, reusable) {
     .style("position", "absolute")
     .style("top", (d) => `${d.y0}px`)
     .style("left", (d) => `${d.x0}px`)
-    .style("padding", "10px");
+    .style("padding", "10px")
+    .on("mouseover", function (e) {
+      d3.select(item)
+        .html(
+          `${this.__data__.data.Agency}<br><br>${
+            this.__data__.data["Expense Category"]
+          }<br>
+        <br>$${format(
+          Number(Math.round(this.__data__.data.Modified + "e2") + "e-2")
+        )}`
+        )
+        .style("visibility", "visible")
+        .style("padding", "20px");
+    })
+    .on("mousemove", (d) => {
+      d3.select(item).style(
+        "transform",
+        `translate(${d.x / 5}px, ${d.y / 2}px)`
+      );
+    })
+    .on("mouseout", function () {
+      d3.select(item).style("visibility", "hidden");
+    });
 }
 
 function geomap() {
@@ -1284,6 +1325,10 @@ function geomap() {
     })
     .on("mouseout", function () {
       d3.select(this).attr("stroke", "white").attr("stroke-width", "1px");
+      d3.selectAll("#ch-details p").html(
+        `Use the range slider to see how funding for our community boards has changed over the past five years. You can interact with one of the community boards on the map below (either by tapping or clicking on the board area) to see that board's allocations over the past five years in one place.`
+      );
+      d3.selectAll("#cbarea").remove();
     })
     .on("click", function () {
       //filter the data here, pass it through to the function
