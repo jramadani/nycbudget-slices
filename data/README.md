@@ -20,7 +20,7 @@ Listed in order of appearance in the file index.js
 **commboards.csv** – a subset of the budget data centered around Community Boards
 |Feature Name | Description|
 |--------|:------|  
-|Accrued Expense An accounting expense recognized by the City before it is paid for|
+|Accrued Expense |An accounting expense recognized by the City before it is paid for|
 |Adopted |Initially allocated funds (before any modifications during the year)|
 |Agency |City agencies and departments; in this dataset, lists Community Boards|
 |CBnum |Column created to match Community Board with its relevant district|
